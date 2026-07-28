@@ -1,0 +1,27 @@
+import Link from "next/link";
+import { prisma } from "@/lib/db";
+
+export default async function GamesPage() {
+  const games = await prisma.game.findMany({
+    where: { active: true },
+    include: { platforms: true, _count: { select: { posts: true } } },
+    orderBy: { name: "asc" }
+  });
+  return (
+    <div className="container grid gap-6 py-8">
+      <h1 className="text-3xl font-black">Game catalog</h1>
+      <div className="grid-auto">
+        {games.map((game) => (
+          <Link href={`/games/${game.slug}`} className="card overflow-hidden" key={game.id}>
+            <div className={`h-28 ${game.fallbackGradient}`} aria-hidden />
+            <div className="grid gap-2 p-4">
+              <h2 className="text-xl font-black">{game.name}</h2>
+              <p className="text-sm text-[var(--muted)]">{game.description}</p>
+              <p className="text-sm font-bold text-[var(--accent)]">{game._count.posts} LFG posts</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
