@@ -2,9 +2,11 @@ export const dynamic = "force-dynamic";
 import { Platform } from "@prisma/client";
 import { Search } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
+import { DiscoverGameFilter } from "@/components/DiscoverGameFilter";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { calculateMatchScore } from "@/lib/matching";
+import { getApprovedGamesForSelection } from "@/lib/game-catalog";
 
 export default async function DiscoverPage({
   searchParams
@@ -14,10 +16,13 @@ export default async function DiscoverPage({
   const params = await searchParams;
   const session = await auth();
   const q = params.q?.trim();
+  const approvedGames = await getApprovedGamesForSelection({ withCounts: true });
   const posts = await prisma.lfgPost.findMany({
     where: {
       status: "ACTIVE",
-      game: params.game ? { slug: params.game } : undefined,
+      game: params.game
+        ? { slug: params.game, approvalStatus: "APPROVED", isActive: true, listingEnabled: true }
+        : { approvalStatus: "APPROVED", isActive: true, listingEnabled: true },
       platform: params.platform ? (params.platform as Platform) : undefined,
       playStyles: params.style ? { has: params.style } : undefined,
       OR: q
@@ -58,7 +63,8 @@ export default async function DiscoverPage({
           <p className="muted">Filter fresh LFG posts and inspect why recommendations fit.</p>
         </div>
         <form className="flex flex-wrap gap-2">
-          <input className="input w-64" name="q" defaultValue={q} placeholder="Search games, tags, titles" />
+          <input className="input w-64" name="q" defaultValue={q} placeholder="Search titles, descriptions, tags" />
+          <DiscoverGameFilter games={approvedGames} selectedSlug={params.game} />
           <select className="input w-44" name="platform" defaultValue={params.platform ?? ""}>
             <option value="">Any platform</option>
             {Object.values(Platform).map((platform) => (

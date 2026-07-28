@@ -15,6 +15,9 @@ erDiagram
   Game ||--o{ LfgPost : listed
   Game ||--o{ GameEdition : offers
   Game ||--o{ GamePlatform : supports
+  Game ||--o{ GameCategoryOnGame : categorized
+  GameCategory ||--o{ GameCategoryOnGame : groups
+  User ||--o{ GameRequest : requests
   User ||--o{ LfgPost : creates
   LfgPost ||--o{ GroupMember : includes
   LfgPost ||--o{ JoinRequest : receives
@@ -50,4 +53,5 @@ flowchart TD
 
 ## Future Adapters
 
-The game catalog is local-first and can later receive IGDB or RAWG data through an adapter. Discord communication is invite-based today, with model boundaries prepared for a future bot that could create temporary channels, roles, or membership sync.
+The game catalog is local-first and can later receive IGDB, RAWG, or verified Steam data through an adapter. New LFG posts and profile game preferences must reference an approved, active, listing-enabled `Game` by ID; unlisted names flow through `GameRequest` for administrator review. The initial Steam-ranked co-op list is captured seed metadata dated July 28, 2026, not a live ranking. Discord communication is invite-based today, with model boundaries prepared for a future bot that could create temporary channels, roles, or membership sync.
+

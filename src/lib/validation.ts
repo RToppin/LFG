@@ -97,3 +97,27 @@ export const reportSchema = z.object({
   type: z.string().min(1),
   details: z.string().max(1000).optional().or(z.literal(""))
 });
+
+export const gameRequestSchema = z.object({
+  requestedName: z.string().min(2).max(120),
+  steamStoreUrl: z.string().url().optional().or(z.literal("")),
+  notes: z.string().max(1000).optional().or(z.literal(""))
+});
+
+export const adminGameSchema = z.object({
+  name: z.string().min(2).max(120),
+  shortName: z.string().max(40).optional().or(z.literal("")),
+  description: z.string().min(10).max(1000),
+  coverImageUrl: z.string().url().optional().or(z.literal("")),
+  aliases: z.array(z.string().min(1)).default([]),
+  platforms: z.array(z.enum(enumValues(Platform))).min(1),
+  categories: z.array(z.string()).default([]),
+  listingEnabled: z.boolean().default(true),
+  isActive: z.boolean().default(true),
+  supportsOnlineCoop: z.boolean().default(true),
+  supportsLocalCoop: z.boolean().default(false),
+  supportsDedicatedServers: z.boolean().default(false),
+  supportsCrossplay: z.boolean().default(false),
+  minimumPlayers: z.coerce.number().int().min(1).max(100).optional().nullable(),
+  maximumPlayers: z.coerce.number().int().min(1).max(1000).optional().nullable()
+});

@@ -1,21 +1,14 @@
 import { createLfgPost } from "@/app/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { LfgOptionSelects, PlatformSelect, PlayStyleChecks } from "@/components/FormControls";
+import { GameSelector } from "@/components/GameSelector";
+import type { CatalogGameForSelector } from "@/lib/game-catalog";
 
-export function LfgPostForm({ games }: { games: Array<{ id: string; name: string }> }) {
+export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
   return (
     <ActionForm action={createLfgPost} className="grid gap-5" submitLabel="Preview and publish">
       <div className="grid-auto">
-        <label className="field">
-          <span>Game</span>
-          <select className="input" name="gameId" required>
-            {games.map((game) => (
-              <option key={game.id} value={game.id}>
-                {game.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GameSelector games={games} />
         <label className="field">
           <span>Platform</span>
           <PlatformSelect />

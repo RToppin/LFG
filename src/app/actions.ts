@@ -4,15 +4,16 @@ import { Prisma, ReportType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
-import { assertOwnerOrModerator, canModerate } from "@/lib/authorization";
+import { assertOwnerOrModerator, canAdmin, canModerate } from "@/lib/authorization";
 import { LISTING_FRESHNESS_DAYS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 import { parseDiscordInvite } from "@/lib/discord";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { cleanText } from "@/lib/sanitize";
 import { calculateExpirationDate } from "@/lib/time";
-import { joinRequestSchema, lfgPostSchema, profileSchema, reportSchema, userGameSchema } from "@/lib/validation";
+import { joinRequestSchema, lfgPostSchema, profileSchema, reportSchema, userGameSchema, gameRequestSchema, adminGameSchema } from "@/lib/validation";
 import { createNotification } from "@/lib/notifications";
+import { APPROVED_GAME_ERROR, findProbableGameMatch, mergeGames, normalizeGameSlug, requireApprovedListingGame, stableGameGradient, uniqueAliases } from "@/lib/game-catalog";
 
 type ActionState = { ok: boolean; message: string };
 
@@ -116,6 +117,11 @@ export async function addUserGame(_: ActionState, formData: FormData): Promise<A
     notifications: !checkbox(formData, "notificationsOff")
   });
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid game." };
+  try {
+    await requireApprovedListingGame(parsed.data.gameId);
+  } catch {
+    return { ok: false, message: APPROVED_GAME_ERROR };
+  }
 
   await prisma.userGame.upsert({
     where: {
@@ -136,8 +142,14 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
   const user = await requireUser();
   const rate = checkRateLimit(`post:${user.id}`, 10, 60 * 60 * 1000);
   if (!rate.ok) return { ok: false, message: "You are creating posts too quickly. Try again later." };
+  const rawGameId = String(formData.get("gameId") ?? "");
+  try {
+    await requireApprovedListingGame(rawGameId);
+  } catch {
+    return { ok: false, message: APPROVED_GAME_ERROR };
+  }
   const parsed = lfgPostSchema.safeParse({
-    gameId: formData.get("gameId"),
+    gameId: rawGameId,
     title: formData.get("title"),
     description: formData.get("description"),
     platform: formData.get("platform"),
@@ -239,6 +251,13 @@ export async function refreshPost(postId: string) {
   const post = await prisma.lfgPost.findUnique({ where: { id: postId } });
   if (!post) return;
   assertOwnerOrModerator(post.ownerId, { id: user.id, role: user.role as never });
+  if (post.status === "DRAFT") {
+    try {
+      await requireApprovedListingGame(post.gameId);
+    } catch {
+      return;
+    }
+  }
   const now = new Date();
   await prisma.lfgPost.update({
     where: { id: postId },
@@ -485,3 +504,189 @@ export async function moderateReport(reportId: string, action: "dismiss" | "remo
   });
   revalidatePath("/admin/reports");
 }
+
+export async function removeUserGame(userGameId: string) {
+  const user = await requireUser();
+  await prisma.userGame.deleteMany({ where: { id: userGameId, userId: user.id } });
+  revalidatePath("/settings/games");
+}
+
+export async function requestGame(_: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const rate = checkRateLimit(`game-request:${user.id}`, 5, 60 * 60 * 1000);
+  if (!rate.ok) return { ok: false, message: "You are requesting games too quickly. Try again later." };
+  const parsed = gameRequestSchema.safeParse({
+    requestedName: formData.get("requestedName"),
+    steamStoreUrl: formData.get("steamStoreUrl"),
+    notes: formData.get("notes")
+  });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid game request." };
+  const probable = await findProbableGameMatch(parsed.data.requestedName);
+  if (probable?.type === "game") {
+    return { ok: false, message: `That looks like ${probable.name}, which is already in the catalog.` };
+  }
+  if (probable?.type === "request") {
+    return { ok: false, message: `A pending request already exists for ${probable.name}.` };
+  }
+  await prisma.gameRequest.create({
+    data: {
+      requestedName: cleanText(parsed.data.requestedName, 120),
+      normalizedName: normalizeGameSlug(parsed.data.requestedName),
+      steamStoreUrl: parsed.data.steamStoreUrl || null,
+      notes: cleanText(parsed.data.notes ?? "", 1000) || null,
+      requestedById: user.id
+    }
+  });
+  revalidatePath("/games/request");
+  return { ok: true, message: "Game request submitted for admin review." };
+}
+
+export async function upsertAdminGame(_: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  if (!canAdmin(user.role as never)) return { ok: false, message: "Only administrators can manage games." };
+  const parsed = adminGameSchema.safeParse({
+    name: formData.get("name"),
+    shortName: formData.get("shortName"),
+    description: formData.get("description"),
+    coverImageUrl: formData.get("coverImageUrl"),
+    aliases: formList(formData, "aliases"),
+    platforms: formList(formData, "platforms"),
+    categories: formList(formData, "categories"),
+    listingEnabled: checkbox(formData, "listingEnabled"),
+    isActive: checkbox(formData, "isActive"),
+    supportsOnlineCoop: checkbox(formData, "supportsOnlineCoop"),
+    supportsLocalCoop: checkbox(formData, "supportsLocalCoop"),
+    supportsDedicatedServers: checkbox(formData, "supportsDedicatedServers"),
+    supportsCrossplay: checkbox(formData, "supportsCrossplay"),
+    minimumPlayers: formData.get("minimumPlayers") || null,
+    maximumPlayers: formData.get("maximumPlayers") || null
+  });
+  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid game." };
+  const id = String(formData.get("gameId") ?? "");
+  const slug = normalizeGameSlug(parsed.data.name);
+  const existing = id
+    ? await prisma.game.findUnique({ where: { id }, select: { id: true } })
+    : await prisma.game.findFirst({
+        where: { OR: [{ slug }, { aliases: { hasSome: uniqueAliases(parsed.data.name, parsed.data.aliases) } }] },
+        select: { id: true }
+      });
+  const saved = existing
+    ? await prisma.game.update({
+        where: { id: existing.id },
+        data: {
+          name: parsed.data.name,
+          shortName: parsed.data.shortName || null,
+          slug,
+          description: cleanText(parsed.data.description, 1000),
+          coverImageUrl: parsed.data.coverImageUrl || null,
+          fallbackGradient: stableGameGradient(slug),
+          source: "ADMIN",
+          approvalStatus: "APPROVED",
+          approvedAt: new Date(),
+          approvedById: user.id,
+          aliases: uniqueAliases(parsed.data.name, parsed.data.aliases),
+          isActive: parsed.data.isActive,
+          active: parsed.data.isActive,
+          listingEnabled: parsed.data.listingEnabled,
+          supportsOnlineCoop: parsed.data.supportsOnlineCoop,
+          supportsLocalCoop: parsed.data.supportsLocalCoop,
+          supportsDedicatedServers: parsed.data.supportsDedicatedServers,
+          supportsCrossplay: parsed.data.supportsCrossplay,
+          crossPlatform: parsed.data.supportsCrossplay,
+          minimumPlayers: parsed.data.minimumPlayers,
+          maximumPlayers: parsed.data.maximumPlayers
+        }
+      })
+    : await prisma.game.create({
+        data: {
+          name: parsed.data.name,
+          shortName: parsed.data.shortName || null,
+          slug,
+          description: cleanText(parsed.data.description, 1000),
+          coverImageUrl: parsed.data.coverImageUrl || null,
+          fallbackGradient: stableGameGradient(slug),
+          source: "ADMIN",
+          approvalStatus: "APPROVED",
+          approvedAt: new Date(),
+          approvedById: user.id,
+          aliases: uniqueAliases(parsed.data.name, parsed.data.aliases),
+          isActive: parsed.data.isActive,
+          active: parsed.data.isActive,
+          listingEnabled: parsed.data.listingEnabled,
+          supportsOnlineCoop: parsed.data.supportsOnlineCoop,
+          supportsLocalCoop: parsed.data.supportsLocalCoop,
+          supportsDedicatedServers: parsed.data.supportsDedicatedServers,
+          supportsCrossplay: parsed.data.supportsCrossplay,
+          crossPlatform: parsed.data.supportsCrossplay,
+          minimumPlayers: parsed.data.minimumPlayers,
+          maximumPlayers: parsed.data.maximumPlayers
+        }
+      });
+  await prisma.gamePlatform.deleteMany({ where: { gameId: saved.id } });
+  await prisma.gamePlatform.createMany({ data: parsed.data.platforms.map((platform) => ({ gameId: saved.id, platform })), skipDuplicates: true });
+  await prisma.gameCategoryOnGame.deleteMany({ where: { gameId: saved.id } });
+  for (const categorySlug of parsed.data.categories) {
+    const category = await prisma.gameCategory.findUnique({ where: { slug: categorySlug } });
+    if (category) await prisma.gameCategoryOnGame.create({ data: { gameId: saved.id, categoryId: category.id } });
+  }
+  await prisma.auditLog.create({ data: { actorId: user.id, action: existing ? "edit-game" : "add-game", targetType: "Game", targetId: saved.id } });
+  revalidatePath("/admin/games");
+  return { ok: true, message: existing ? "Game updated." : "Game added." };
+}
+
+export async function setGameCatalogState(gameId: string, action: "disable-listings" | "reactivate" | "archive") {
+  const user = await requireUser();
+  if (!canAdmin(user.role as never)) return;
+  const data =
+    action === "archive"
+      ? { approvalStatus: "ARCHIVED" as const, isActive: false, active: false, listingEnabled: false }
+      : action === "reactivate"
+        ? { approvalStatus: "APPROVED" as const, isActive: true, active: true, listingEnabled: true }
+        : { listingEnabled: false };
+  await prisma.game.update({ where: { id: gameId }, data });
+  await prisma.auditLog.create({ data: { actorId: user.id, action, targetType: "Game", targetId: gameId } });
+  revalidatePath("/admin/games");
+}
+
+export async function reviewGameRequest(requestId: string, status: "APPROVED" | "REJECTED" | "DUPLICATE") {
+  const user = await requireUser();
+  if (!canAdmin(user.role as never)) return;
+  const request = await prisma.gameRequest.findUnique({ where: { id: requestId } });
+  if (!request) return;
+  let probableGameId = request.probableGameId;
+  if (status === "APPROVED") {
+    const slug = normalizeGameSlug(request.requestedName);
+    const game = await prisma.game.upsert({
+      where: { slug },
+      create: {
+        name: request.requestedName,
+        slug,
+        description: request.notes || "User-requested game awaiting richer catalog metadata.",
+        fallbackGradient: stableGameGradient(slug),
+        source: "USER_REQUEST",
+        approvalStatus: "APPROVED",
+        isActive: true,
+        active: true,
+        listingEnabled: true,
+        aliases: uniqueAliases(request.requestedName),
+        approvedAt: new Date(),
+        approvedById: user.id,
+        platforms: { create: [{ platform: "PC" }] }
+      },
+      update: { approvalStatus: "APPROVED", isActive: true, active: true, listingEnabled: true, approvedAt: new Date(), approvedById: user.id }
+    });
+    probableGameId = game.id;
+  }
+  await prisma.gameRequest.update({ where: { id: requestId }, data: { status, reviewedById: user.id, reviewedAt: new Date(), probableGameId } });
+  await prisma.auditLog.create({ data: { actorId: user.id, action: `game-request-${status.toLowerCase()}`, targetType: "GameRequest", targetId: requestId } });
+  revalidatePath("/admin/games");
+}
+
+export async function mergeGamesAction(formData: FormData) {
+  const user = await requireUser();
+  if (!canAdmin(user.role as never)) return;
+  await mergeGames(String(formData.get("sourceGameId")), String(formData.get("targetGameId")), user.id);
+  revalidatePath("/admin/games");
+}
+
+

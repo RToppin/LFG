@@ -2,13 +2,13 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LfgPostForm } from "@/components/LfgPostForm";
-import { prisma } from "@/lib/db";
+import { getApprovedGamesForSelection } from "@/lib/game-catalog";
 
 export default async function NewLfgPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (!session.user.onboarded) redirect("/onboarding");
-  const games = await prisma.game.findMany({ where: { active: true }, orderBy: { name: "asc" } });
+  const games = await getApprovedGamesForSelection();
   return (
     <div className="container grid gap-6 py-8">
       <div>

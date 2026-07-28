@@ -1,35 +1,29 @@
 export const dynamic = "force-dynamic";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { addUserGame } from "@/app/actions";
+import { addUserGame, removeUserGame } from "@/app/actions";
 import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
 import { ExperienceSelect, PlatformSelect, PlayStyleChecks } from "@/components/FormControls";
+import { GameSelector } from "@/components/GameSelector";
 import { prisma } from "@/lib/db";
+import { getApprovedGamesForSelection } from "@/lib/game-catalog";
 
 export default async function GameSettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const [games, profile] = await Promise.all([
-    prisma.game.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    getApprovedGamesForSelection(),
     prisma.profile.findUnique({ where: { userId: session.user.id }, include: { games: { include: { game: true } } } })
   ]);
   if (!profile) redirect("/onboarding");
   return (
     <div className="container grid gap-6 py-8">
       <section className="panel grid gap-4 p-6">
-        <h1 className="text-3xl font-black">Game library</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-black">Game library</h1><Link className="btn secondary" href="/games/request">Request missing game</Link></div>
         <ActionForm action={addUserGame} submitLabel="Add or update game">
           <div className="grid-auto">
-            <label className="field">
-              <span>Game</span>
-              <select className="input" name="gameId">
-                {games.map((game) => (
-                  <option key={game.id} value={game.id}>
-                    {game.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <GameSelector games={games} />
             <label className="field">
               <span>Platform</span>
               <PlatformSelect />

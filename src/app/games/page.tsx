@@ -4,8 +4,8 @@ import { prisma } from "@/lib/db";
 
 export default async function GamesPage() {
   const games = await prisma.game.findMany({
-    where: { active: true },
-    include: { platforms: true, _count: { select: { posts: true } } },
+    where: { approvalStatus: "APPROVED", isActive: true },
+    include: { platforms: true, categories: { include: { category: true } }, _count: { select: { posts: true } } },
     orderBy: { name: "asc" }
   });
   return (

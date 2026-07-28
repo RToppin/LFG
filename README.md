@@ -6,7 +6,7 @@ LFG is a full-stack Looking for Group application for multiplayer co-op and surv
 
 - Auth.js authentication with Discord OAuth and a development-only test login.
 - Persistent player profiles, privacy controls, game libraries, platforms, play styles, and availability.
-- Local game catalog seeded with Valheim, Minecraft Java, Minecraft Bedrock, ARK Survival Evolved, ARK Survival Ascended, Palworld, Terraria, and Project Zomboid.
+- Controlled approved game catalog with Minecraft, curated games, and a captured Steam-ranked co-op seed list from July 28, 2026.
 - LFG post creation with campaign dates, listing expiration, hosting status, join mode, capacity, tags, Discord invitation validation, public or private invite behavior, refresh, close, save, and report actions.
 - Discover search and filters for active posts with rule-based match scores and explanations.
 - Join request workflow for open join and approval-required groups.
@@ -91,6 +91,26 @@ In the Discord Developer Portal:
 
 OAuth access tokens are stored server-side by Auth.js and are never exposed to browser code.
 
+## Approved Game Catalog
+
+LFG only accepts LFG posts and profile game preferences for existing approved `Game` records. A game can receive new listings when `approvalStatus = APPROVED`, `isActive = true`, and `listingEnabled = true`; server actions re-check those flags so users cannot submit arbitrary typed names or tampered game IDs.
+
+The seed script preserves existing catalog data and upserts the pre-approved catalog idempotently:
+
+```bash
+npm run db:seed
+```
+
+The initial ranked Steam catalog is a captured seed list from July 28, 2026. It stores `source = STEAM` and `sourceRank`, but it does not store live player counts or imply a current ranking. Manually curated non-Steam games such as Minecraft use `source = CURATED`. Steam App IDs are nullable and are intentionally left empty unless verified through an authoritative source already available to the project.
+
+Users who cannot find a game can submit a request at `/games/request` with a name, optional Steam store URL, and notes. Requests stay private to the admin workflow until an administrator approves them. Duplicate detection checks canonical names, slugs, aliases, and pending requests before accepting a new request.
+
+Administrators manage the catalog at `/admin/games`: search games, add or edit metadata, approve/reject/mark duplicate requests, disable new listings, reactivate, archive, assign categories/platforms, and merge duplicate game records. Merge operations run transactionally and move related references before archiving the duplicate source game.
+
+Future Steam integration should import into the same normalized `Game` model through an adapter, verify App IDs before writing them, and treat external ranking or popularity data as dated metadata rather than a permanent live claim.
+
+Steam and the Steam logo are trademarks of Valve Corporation. LFG is not affiliated with or endorsed by Valve.
+
 ## Cron
 
 The protected expiration endpoint is:
@@ -157,3 +177,4 @@ This work lives on `feature/lfg-core-platform`. Future work must use a feature, 
 - Verified community organizers.
 - Featured posts and premium discovery tools.
 - Public API.
+
