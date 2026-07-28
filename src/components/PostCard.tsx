@@ -9,6 +9,7 @@ type PostCardPost = {
   title: string;
   playStyles: string[];
   platform: string;
+  platforms?: string[];
   hostingStatus: string;
   durationType: string;
   currentGroupSize: number;
@@ -26,6 +27,9 @@ export function PostCard({
   match?: { score: number; reasons: string[] };
 }) {
   const openSlots = Math.max(0, post.maxPlayers - post.currentGroupSize);
+  const platformText = (post.platforms?.length ? post.platforms : [post.platform])
+    .map((platform) => PLATFORM_LABELS[platform as keyof typeof PLATFORM_LABELS] ?? platform)
+    .join(", ");
   return (
     <article className="card overflow-hidden">
       <GameCover game={post.game} className="h-20" imageSizes="(max-width: 768px) 100vw, 360px" initialsClassName="text-xl" />
@@ -54,7 +58,7 @@ export function PostCard({
           </span>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          {PLATFORM_LABELS[post.platform as keyof typeof PLATFORM_LABELS]} |{" "}
+          {platformText} |{" "}
           {HOSTING_LABELS[post.hostingStatus as keyof typeof HOSTING_LABELS]} |{" "}
           {DURATION_LABELS[post.durationType as keyof typeof DURATION_LABELS]}
         </p>

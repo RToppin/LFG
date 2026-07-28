@@ -1,6 +1,6 @@
 "use server";
 
-import { Prisma, ReportType } from "@prisma/client";
+import { CampaignDurationType, Platform, Prisma, ReportType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
@@ -45,6 +45,36 @@ function formList(formData: FormData, key: string) {
 
 function checkbox(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
+}
+
+function deriveServerRegion(timeZone: string) {
+  const area = timeZone.split("/")[0]?.replaceAll("_", " ") || "Global";
+  if (area === "America") return "North America";
+  if (area === "Europe") return "Europe";
+  if (area === "Asia") return "Asia";
+  if (area === "Australia" || area === "Pacific") return "Oceania";
+  return area;
+}
+
+function campaignEndFromDuration(durationType: CampaignDurationType, startsAt: Date) {
+  const days =
+    durationType === "ONE_SESSION"
+      ? 1
+      : durationType === "WEEKEND"
+        ? 3
+        : durationType === "ONE_WEEK"
+          ? 7
+          : durationType === "TWO_WEEKS"
+            ? 14
+            : durationType === "SEVERAL_SESSIONS"
+              ? 30
+              : null;
+  return days ? new Date(startsAt.getTime() + days * 24 * 60 * 60 * 1000) : null;
+}
+
+function primaryPlatform(platforms: Platform[]) {
+  if (platforms.includes("CROSS_PLATFORM")) return "CROSS_PLATFORM";
+  return platforms[0] ?? "PC";
 }
 
 export async function saveProfile(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -148,23 +178,22 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
   } catch {
     return { ok: false, message: APPROVED_GAME_ERROR };
   }
+  const game = await prisma.game.findUniqueOrThrow({ where: { id: rawGameId }, select: { name: true } });
+  const rawPlatforms = formList(formData, "platforms");
   const parsed = lfgPostSchema.safeParse({
     gameId: rawGameId,
-    title: formData.get("title"),
-    description: formData.get("description"),
-    platform: formData.get("platform"),
-    timeZone: formData.get("timeZone"),
-    campaignStartsAt: formData.get("campaignStartsAt"),
-    campaignEndsAt: formData.get("campaignEndsAt") || null,
+    title: formData.get("title") || game.name,
+    description: formData.get("description") || "",
+    platforms: rawPlatforms.length ? rawPlatforms : ["PC"],
+    timeZone: formData.get("timeZone") || "America/New_York",
     flexibleTime: checkbox(formData, "flexibleTime"),
-    playersNeeded: formData.get("playersNeeded"),
-    currentGroupSize: formData.get("currentGroupSize"),
+    currentGroupSize: "1",
     maxPlayers: formData.get("maxPlayers"),
     playStyles: formList(formData, "playStyles"),
     hostingStatus: formData.get("hostingStatus"),
     durationType: formData.get("durationType"),
-    joinMode: formData.get("joinMode"),
-    edition: formData.get("edition"),
+    joinMode: "OPEN",
+    edition: "",
     serverRegion: formData.get("serverRegion"),
     recurringSchedule: formData.get("recurringSchedule"),
     daysOfWeek: formList(formData, "daysOfWeek"),
@@ -176,32 +205,37 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
     requestedExperience: formData.get("requestedExperience"),
     microphoneRequired: checkbox(formData, "microphoneRequired"),
     preferredLanguage: formData.get("preferredLanguage"),
-    minimumAge: formData.get("minimumAge") || null,
+    minimumAge: "13",
     serverRules: formData.get("serverRules"),
     existingWorld: checkbox(formData, "existingWorld"),
     waitlistEnabled: checkbox(formData, "waitlistEnabled"),
     autoCloseWhenFull: checkbox(formData, "autoCloseWhenFull"),
     discordInvite: formData.get("discordInvite"),
-    discordInviteVisibility: formData.get("discordInviteVisibility") || "APPROVED_MEMBERS",
+    discordInviteVisibility: formData.get("discordInviteVisibility") || "PUBLIC",
     publish: formData.get("intent") !== "draft"
   });
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid post." };
   const now = new Date();
   const status = parsed.data.publish ? "ACTIVE" : "DRAFT";
+  const title = cleanText(parsed.data.title || game.name, 90);
+  const description = cleanText(parsed.data.description || `${game.name} gaming`);
+  const campaignEndsAt = campaignEndFromDuration(parsed.data.durationType, now);
+  const selectedPlatforms = parsed.data.platforms;
   const invite = parseDiscordInvite(parsed.data.discordInvite);
 
   const post = await prisma.lfgPost.create({
     data: {
       ownerId: user.id,
       gameId: parsed.data.gameId,
-      title: cleanText(parsed.data.title, 90),
-      description: cleanText(parsed.data.description),
-      platform: parsed.data.platform,
+      title,
+      description,
+      platform: primaryPlatform(selectedPlatforms),
+      platforms: selectedPlatforms,
       timeZone: parsed.data.timeZone,
-      campaignStartsAt: parsed.data.campaignStartsAt,
-      campaignEndsAt: parsed.data.campaignEndsAt,
+      campaignStartsAt: now,
+      campaignEndsAt,
       flexibleTime: parsed.data.flexibleTime,
-      playersNeeded: parsed.data.playersNeeded,
+      playersNeeded: Math.max(1, parsed.data.maxPlayers - parsed.data.currentGroupSize),
       currentGroupSize: parsed.data.currentGroupSize,
       maxPlayers: parsed.data.maxPlayers,
       playStyles: parsed.data.playStyles,
@@ -210,7 +244,7 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
       joinMode: parsed.data.joinMode,
       status,
       edition: parsed.data.edition || null,
-      serverRegion: parsed.data.serverRegion || null,
+      serverRegion: parsed.data.serverRegion || deriveServerRegion(parsed.data.timeZone),
       recurringSchedule: parsed.data.recurringSchedule || null,
       daysOfWeek: parsed.data.daysOfWeek,
       sessionLength: parsed.data.sessionLength || null,
@@ -688,5 +722,4 @@ export async function mergeGamesAction(formData: FormData) {
   await mergeGames(String(formData.get("sourceGameId")), String(formData.get("targetGameId")), user.id);
   revalidatePath("/admin/games");
 }
-
 

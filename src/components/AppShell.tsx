@@ -1,15 +1,16 @@
-import { Bell, Bookmark, Compass, Gamepad2, PlusCircle, Settings, Shield, Users } from "lucide-react";
+import { Gamepad2 } from "lucide-react";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions";
 import { auth } from "@/auth";
+import { NavLinks, type NavItem } from "@/components/NavLinks";
 
-const nav = [
-  { href: "/discover", label: "Discover", icon: Compass },
-  { href: "/groups", label: "My Groups", icon: Users },
-  { href: "/lfg/new", label: "Create Post", icon: PlusCircle },
-  { href: "/notifications", label: "Notifications", icon: Bell },
-  { href: "/saved", label: "Saved", icon: Bookmark },
-  { href: "/settings/profile", label: "Settings", icon: Settings }
+const nav: NavItem[] = [
+  { href: "/discover", label: "Discover", icon: "compass" },
+  { href: "/groups", label: "My Groups", icon: "users" },
+  { href: "/lfg/new", label: "Create Post", icon: "plus" },
+  { href: "/notifications", label: "Notifications", icon: "bell" },
+  { href: "/saved", label: "Saved", icon: "bookmark" },
+  { href: "/settings/profile", label: "Settings", icon: "settings" }
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -25,25 +26,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           LFG
         </Link>
         <nav className="grid gap-1">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-white"
-            >
-              <item.icon size={18} aria-hidden />
-              {item.label}
-            </Link>
-          ))}
-          {isStaff ? (
-            <Link
-              href="/admin"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-bold text-[var(--muted)] hover:bg-[var(--panel)] hover:text-white"
-            >
-              <Shield size={18} aria-hidden />
-              Admin
-            </Link>
-          ) : null}
+          <NavLinks items={isStaff ? nav.concat({ href: "/admin", label: "Admin", icon: "shield" }) : nav} />
         </nav>
         <div className="mt-8 grid gap-3 text-sm">
           {session ? (
@@ -66,13 +49,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
       <main className="pb-20 md:pb-0">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-[var(--line)] bg-[#0b1018] md:hidden">
-        {nav.slice(0, 5).map((item) => (
-          <Link key={item.href} href={item.href} className="grid place-items-center gap-1 py-2 text-[0.68rem] font-bold">
-            <item.icon size={18} aria-hidden />
-            {item.label}
-          </Link>
-        ))}
+        <NavLinks items={nav.slice(0, 5)} variant="mobile" />
       </nav>
     </div>
   );
 }
+
+

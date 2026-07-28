@@ -22,6 +22,7 @@ export type MatchPost = {
   ownerId: string;
   gameId: string;
   platform: Platform;
+  platforms?: Platform[];
   playStyles: string[];
   hostingStatus: HostingStatus;
   modded: boolean;
@@ -59,9 +60,10 @@ export function calculateMatchScore(profile: MatchProfile, post: MatchPost, view
 
   if (userGame) {
     reasons.push("You both play this game.");
-    if (userGame.platform === post.platform || post.platform === "CROSS_PLATFORM") {
+    const postPlatforms = post.platforms?.length ? post.platforms : [post.platform];
+    if (postPlatforms.includes(userGame.platform) || postPlatforms.includes("CROSS_PLATFORM")) {
       score += 18;
-      reasons.push(`Platform compatible on ${post.platform.replace("_", " ").toLowerCase()}.`);
+      reasons.push(`Platform compatible on ${postPlatforms.join(", ").replaceAll("_", " ").toLowerCase()}.`);
     }
     const sharedStyles = intersection(userGame.playStyles.concat(profile.playStyles), post.playStyles);
     if (sharedStyles.length > 0) {

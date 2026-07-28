@@ -10,12 +10,14 @@ export function GameSelector({
   games,
   name = "gameId",
   label = "Game",
-  initialGameId
+  initialGameId,
+  onSelect
 }: {
   games: CatalogGameForSelector[];
   name?: string;
   label?: string;
   initialGameId?: string;
+  onSelect?: (game: CatalogGameForSelector) => void;
 }) {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(initialGameId ?? games[0]?.id ?? "");
@@ -39,6 +41,7 @@ export function GameSelector({
     setSelectedId(game.id);
     setQuery(game.name);
     setActiveIndex(index);
+    onSelect?.(game);
   }
 
   return (

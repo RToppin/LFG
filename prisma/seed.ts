@@ -280,6 +280,7 @@ async function createPost(input: {
       title: input.title,
       description: input.description,
       platform: input.platform,
+      platforms: [input.platform],
       timeZone: "America/New_York",
       campaignStartsAt: input.startsAt,
       campaignEndsAt: new Date(input.startsAt.getTime() + 14 * 24 * 60 * 60 * 1000),
@@ -289,7 +290,7 @@ async function createPost(input: {
       playStyles: input.playStyles,
       hostingStatus: "OWNER_HOSTING",
       durationType: "TWO_WEEKS",
-      joinMode: "APPROVAL_REQUIRED",
+      joinMode: "OPEN",
       status: "ACTIVE",
       requestedExperience: "ANY",
       preferredLanguage: "English",
@@ -303,6 +304,9 @@ async function createPost(input: {
       title: input.title,
       description: input.description,
       status: "ACTIVE",
+      platform: input.platform,
+      platforms: [input.platform],
+      joinMode: "OPEN",
       refreshedAt,
       expiresAt: calculateExpirationDate(refreshedAt)
     }

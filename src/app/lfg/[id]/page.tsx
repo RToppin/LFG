@@ -27,6 +27,7 @@ export default async function LfgDetailPage({ params }: { params: Promise<{ id: 
   if (!post) notFound();
   const isOwner = session?.user.id === post.ownerId;
   const isMember = post.members.some((member) => member.userId === session?.user.id);
+  const platformText = (post.platforms.length ? post.platforms : [post.platform]).map((platform) => PLATFORM_LABELS[platform]).join(", ");
   const canSeeInvite =
     post.invitation?.visibility === "PUBLIC" || isOwner || isMember || session?.user.role === "ADMIN" || session?.user.role === "MODERATOR";
   const times = formatViewerTime(
@@ -94,7 +95,7 @@ export default async function LfgDetailPage({ params }: { params: Promise<{ id: 
             <Info label="Original time zone" value={times.original} />
             <Info label="Freshness" value={freshnessLabel(post.expiresAt)} />
             <Info label="Slots" value={`${post.currentGroupSize}/${post.maxPlayers} players`} />
-            <Info label="Platform" value={PLATFORM_LABELS[post.platform]} />
+            <Info label="Platforms" value={platformText} />
             <Info label="Hosting" value={HOSTING_LABELS[post.hostingStatus]} />
             <Info label="Duration" value={DURATION_LABELS[post.durationType]} />
             <Info label="Join mode" value={post.joinMode === "OPEN" ? "Open join" : "Approval required"} />

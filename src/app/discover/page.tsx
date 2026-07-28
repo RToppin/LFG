@@ -25,16 +25,18 @@ export default async function DiscoverPage({
       game: params.game
         ? { slug: params.game, approvalStatus: "APPROVED", isActive: true, listingEnabled: true }
         : { approvalStatus: "APPROVED", isActive: true, listingEnabled: true },
-      platform: params.platform ? (params.platform as Platform) : undefined,
       playStyles: params.style ? { has: params.style } : undefined,
-      OR: q
-        ? [
+      AND: [
+        params.platform ? { OR: [{ platform: params.platform as Platform }, { platforms: { has: params.platform as Platform } }] } : {},
+        q
+          ? { OR: [
             { title: { contains: q, mode: "insensitive" } },
             { description: { contains: q, mode: "insensitive" } },
             { modpackName: { contains: q, mode: "insensitive" } },
             { game: { name: { contains: q, mode: "insensitive" } } }
-          ]
-        : undefined
+          ] }
+          : {}
+      ]
     },
     include: { game: true, owner: { include: { profile: true } } },
     orderBy:

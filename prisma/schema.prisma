@@ -410,6 +410,7 @@ model LfgPost {
   title             String
   description       String
   platform          Platform
+  platforms         Platform[]           @default([])
   timeZone          String
   campaignStartsAt  DateTime
   campaignEndsAt    DateTime?
@@ -420,7 +421,7 @@ model LfgPost {
   playStyles        String[]
   hostingStatus     HostingStatus
   durationType      CampaignDurationType
-  joinMode          JoinMode             @default(APPROVAL_REQUIRED)
+  joinMode          JoinMode             @default(OPEN)
   status            PostStatus           @default(DRAFT)
   edition           String?
   serverRegion      String?
@@ -460,6 +461,7 @@ model LfgPost {
 
   @@index([gameId, status, expiresAt])
   @@index([platform, status])
+  @@index([platforms], type: Gin)
   @@index([campaignStartsAt])
   @@index([refreshedAt])
   @@index([timeZone])

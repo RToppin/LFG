@@ -42,20 +42,17 @@ export const userGameSchema = z.object({
 export const lfgPostSchema = z
   .object({
     gameId: z.string().min(1),
-    title: z.string().min(5).max(90),
-    description: z.string().min(20).max(2000),
-    platform: z.enum(enumValues(Platform)),
+    title: z.string().min(2).max(90),
+    description: z.string().max(2000).optional().or(z.literal("")),
+    platforms: z.array(z.enum(enumValues(Platform))).min(1),
     timeZone: z.string().min(3),
-    campaignStartsAt: z.coerce.date(),
-    campaignEndsAt: z.coerce.date().optional().nullable(),
     flexibleTime: z.boolean().default(false),
-    playersNeeded: z.coerce.number().int().min(1).max(99),
     currentGroupSize: z.coerce.number().int().min(1).max(100),
     maxPlayers: z.coerce.number().int().min(2).max(100),
     playStyles: z.array(z.string()).default([]),
     hostingStatus: z.enum(enumValues(HostingStatus)),
     durationType: z.enum(enumValues(CampaignDurationType)),
-    joinMode: z.enum(enumValues(JoinMode)),
+    joinMode: z.enum(enumValues(JoinMode)).default(JoinMode.OPEN),
     edition: z.string().max(80).optional().or(z.literal("")),
     serverRegion: z.string().max(80).optional().or(z.literal("")),
     recurringSchedule: z.string().max(300).optional().or(z.literal("")),
@@ -74,11 +71,11 @@ export const lfgPostSchema = z
     waitlistEnabled: z.boolean().default(false),
     autoCloseWhenFull: z.boolean().default(false),
     discordInvite: z.string().optional().or(z.literal("")),
-    discordInviteVisibility: z.enum(["PUBLIC", "APPROVED_MEMBERS"]).default("APPROVED_MEMBERS"),
+    discordInviteVisibility: z.enum(["PUBLIC", "APPROVED_MEMBERS"]).default("PUBLIC"),
     publish: z.boolean().default(true)
   })
-  .refine((data) => data.maxPlayers >= data.currentGroupSize + data.playersNeeded, {
-    message: "Max players must fit current members plus requested slots.",
+  .refine((data) => data.maxPlayers > data.currentGroupSize, {
+    message: "Max players must be greater than current group size.",
     path: ["maxPlayers"]
   })
   .refine((data) => !data.discordInvite || isDiscordInvite(data.discordInvite), {
@@ -121,3 +118,4 @@ export const adminGameSchema = z.object({
   minimumPlayers: z.coerce.number().int().min(1).max(100).optional().nullable(),
   maximumPlayers: z.coerce.number().int().min(1).max(1000).optional().nullable()
 });
+
