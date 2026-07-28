@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import { auth } from "@/auth";

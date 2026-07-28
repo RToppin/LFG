@@ -234,9 +234,11 @@ async function createPost(input: {
   publicInvite?: boolean;
 }) {
   const refreshedAt = new Date();
+  const postId = `${input.ownerId}-${input.gameId}`;
   const post = await prisma.lfgPost.upsert({
-    where: { id: `${input.ownerId}-${input.gameId}` },
+    where: { id: postId },
     create: {
+      id: postId,
       ownerId: input.ownerId,
       gameId: input.gameId,
       title: input.title,

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Gamepad2 } from "lucide-react";
 import { signInWithDevUser, signInWithDiscord } from "@/app/actions";
 import { isTestAuthEnabled } from "@/lib/env";

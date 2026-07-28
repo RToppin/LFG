@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { ArrowRight, Search, ShieldCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/db";

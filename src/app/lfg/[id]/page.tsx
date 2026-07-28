@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Calendar, Check, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";

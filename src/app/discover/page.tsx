@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Platform } from "@prisma/client";
 import { Search } from "lucide-react";
 import { PostCard } from "@/components/PostCard";

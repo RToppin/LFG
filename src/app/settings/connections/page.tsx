@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { signInWithDiscord } from "@/app/actions";
 import { auth } from "@/auth";
