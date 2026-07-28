@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
+import { GameCover } from "@/components/GameCover";
 import { prisma } from "@/lib/db";
 
 export default async function GamesPage() {
@@ -14,7 +15,7 @@ export default async function GamesPage() {
       <div className="grid-auto">
         {games.map((game) => (
           <Link href={`/games/${game.slug}`} className="card overflow-hidden" key={game.id}>
-            <div className={`h-28 ${game.fallbackGradient}`} aria-hidden />
+            <GameCover game={game} className="h-32" />
             <div className="grid gap-2 p-4">
               <h2 className="text-xl font-black">{game.name}</h2>
               <p className="text-sm text-[var(--muted)]">{game.description}</p>

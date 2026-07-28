@@ -6,6 +6,9 @@ export type SeedCatalogGame = {
   shortName?: string;
   description: string;
   sourceRank: number;
+  steamAppId?: number;
+  coverImageUrl?: string;
+  fallbackGradient?: string;
   aliases?: string[];
   platforms?: Platform[];
   categories?: string[];
@@ -37,22 +40,29 @@ export const GAME_CATEGORIES = [
   "Local co-op"
 ];
 
+function steamCover(steamAppId: number, fallbackGradient: string) {
+  return {
+    steamAppId,
+    coverImageUrl: `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/header.jpg`,
+    fallbackGradient
+  };
+}
 export const STEAM_COOP_CATALOG: SeedCatalogGame[] = [
-  { name: "Counter-Strike 2", sourceRank: 1, description: "Team-based tactical shooter with competitive multiplayer.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC] },
-  { name: "Dota 2", sourceRank: 2, description: "Team competitive strategy action with coordinated multiplayer roles.", categories: ["Team competitive", "Strategy"], platforms: [Platform.PC] },
-  { name: "Palworld", sourceRank: 3, description: "Creature collecting, base building, survival crafting, and co-op exploration.", categories: ["Survival crafting", "Sandbox"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.CROSS_PLATFORM], supportsCrossplay: true, supportsDedicatedServers: true },
-  { name: "PUBG: BATTLEGROUNDS", sourceRank: 4, description: "Squad-based battle royale shooter.", aliases: ["PUBG", "PlayerUnknown's Battlegrounds"], categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
+  { name: "Counter-Strike 2", sourceRank: 1, ...steamCover(730, "bg-gradient-to-br from-orange-500 via-slate-800 to-zinc-950"), description: "Team-based tactical shooter with competitive multiplayer.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC] },
+  { name: "Dota 2", sourceRank: 2, ...steamCover(570, "bg-gradient-to-br from-red-700 via-stone-900 to-black"), description: "Team competitive strategy action with coordinated multiplayer roles.", categories: ["Team competitive", "Strategy"], platforms: [Platform.PC] },
+  { name: "Palworld", sourceRank: 3, ...steamCover(1623730, "bg-gradient-to-br from-sky-400 via-cyan-700 to-slate-950"), description: "Creature collecting, base building, survival crafting, and co-op exploration.", categories: ["Survival crafting", "Sandbox"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.CROSS_PLATFORM], supportsCrossplay: true, supportsDedicatedServers: true },
+  { name: "PUBG: BATTLEGROUNDS", sourceRank: 4, ...steamCover(578080, "bg-gradient-to-br from-amber-400 via-stone-800 to-zinc-950"), description: "Squad-based battle royale shooter.", aliases: ["PUBG", "PlayerUnknown's Battlegrounds"], categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "EA SPORTS FC 26", sourceRank: 5, description: "Football sports multiplayer with team and club modes.", aliases: ["FC 26", "EA FC 26"], categories: ["Sports", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH] },
-  { name: "Rust", sourceRank: 6, description: "Open-world survival crafting and base-building multiplayer.", categories: ["Survival crafting", "Sandbox", "Dedicated-server game"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION], supportsDedicatedServers: true },
-  { name: "Apex Legends", sourceRank: 7, description: "Squad-based hero battle royale shooter.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
+  { name: "Rust", sourceRank: 6, ...steamCover(252490, "bg-gradient-to-br from-orange-700 via-neutral-800 to-stone-950"), description: "Open-world survival crafting and base-building multiplayer.", categories: ["Survival crafting", "Sandbox", "Dedicated-server game"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION], supportsDedicatedServers: true },
+  { name: "Apex Legends", sourceRank: 7, ...steamCover(1172470, "bg-gradient-to-br from-red-600 via-orange-800 to-zinc-950"), description: "Squad-based hero battle royale shooter.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
   { name: "The Binding of Isaac: Rebirth", sourceRank: 8, description: "Roguelike action game with co-op modes.", categories: ["Cooperative campaign", "Local co-op"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH], supportsLocalCoop: true },
   { name: "Grand Theft Auto V Legacy", sourceRank: 9, description: "Open-world multiplayer action sandbox.", aliases: ["GTA V Legacy", "Grand Theft Auto 5 Legacy"], categories: ["Sandbox", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
-  { name: "Dead by Daylight", sourceRank: 10, description: "Asymmetric horror multiplayer with coordinated survivor play.", categories: ["Horror co-op", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
+  { name: "Dead by Daylight", sourceRank: 10, ...steamCover(381210, "bg-gradient-to-br from-red-950 via-neutral-900 to-slate-950"), description: "Asymmetric horror multiplayer with coordinated survivor play.", categories: ["Horror co-op", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
   { name: "Grand Theft Auto V Enhanced", sourceRank: 11, description: "Enhanced open-world multiplayer action sandbox.", aliases: ["GTA V Enhanced", "Grand Theft Auto 5 Enhanced"], categories: ["Sandbox", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "Delta Force", sourceRank: 12, description: "Team-based tactical shooter.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC] },
   { name: "Marvel Rivals", sourceRank: 13, description: "Team-based hero shooter.", categories: ["Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "Slay the Spire 2", sourceRank: 14, description: "Deckbuilding roguelike sequel with multiplayer-interest listings.", categories: ["Strategy"], platforms: [Platform.PC] },
-  { name: "Warframe", sourceRank: 15, description: "Online cooperative action RPG with missions and progression.", categories: ["Cooperative campaign", "Action RPG", "MMO"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
+  { name: "Warframe", sourceRank: 15, ...steamCover(230410, "bg-gradient-to-br from-sky-300 via-indigo-700 to-slate-950"), description: "Online cooperative action RPG with missions and progression.", categories: ["Cooperative campaign", "Action RPG", "MMO"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH, Platform.CROSS_PLATFORM], supportsCrossplay: true },
   { name: "Team Fortress 2", sourceRank: 16, description: "Class-based team shooter.", aliases: ["TF2"], categories: ["Team competitive"], platforms: [Platform.PC] },
   { name: "Battlefield 6", sourceRank: 17, description: "Large-scale team shooter.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "Tom Clancy's Rainbow Six Siege", sourceRank: 18, description: "Team tactical shooter focused on operators and objective play.", aliases: ["Rainbow Six Siege", "R6 Siege"], categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
@@ -71,7 +81,7 @@ export const STEAM_COOP_CATALOG: SeedCatalogGame[] = [
   { name: "R.E.P.O.", sourceRank: 31, description: "Cooperative horror extraction game.", aliases: ["REPO"], categories: ["Horror co-op", "Extraction"], platforms: [Platform.PC] },
   { name: "Call of Duty", sourceRank: 32, description: "Multiplayer shooter franchise entry.", categories: ["Team competitive", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.CROSS_PLATFORM], supportsCrossplay: true },
   { name: "Scrap Mechanic", sourceRank: 33, description: "Creative sandbox and survival building multiplayer.", categories: ["Sandbox", "Survival crafting"], platforms: [Platform.PC] },
-  { name: "HELLDIVERS 2", sourceRank: 34, description: "Squad cooperative third-person shooter.", aliases: ["Helldivers 2", "HELLDIVERS\u2122 2"], categories: ["Cooperative campaign", "Tactical shooter"], platforms: [Platform.PC, Platform.PLAYSTATION] },
+  { name: "HELLDIVERS 2", sourceRank: 34, ...steamCover(553850, "bg-gradient-to-br from-yellow-400 via-neutral-800 to-black"), description: "Squad cooperative third-person shooter.", aliases: ["Helldivers 2", "HELLDIVERS\u2122 2"], categories: ["Cooperative campaign", "Tactical shooter"], platforms: [Platform.PC, Platform.PLAYSTATION] },
   { name: "Project Zomboid", sourceRank: 35, description: "Hardcore zombie survival with roleplay, mods, and long campaigns.", categories: ["Survival crafting", "Horror co-op", "Dedicated-server game"], platforms: [Platform.PC], supportsDedicatedServers: true },
   { name: "eFootball", sourceRank: 36, description: "Football sports multiplayer.", categories: ["Sports", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "Total War: WARHAMMER III", sourceRank: 37, description: "Strategy campaign and battle multiplayer.", aliases: ["Total War Warhammer 3"], categories: ["Strategy"], platforms: [Platform.PC] },
@@ -82,7 +92,7 @@ export const STEAM_COOP_CATALOG: SeedCatalogGame[] = [
   { name: "NBA 2K26", sourceRank: 42, description: "Basketball sports multiplayer.", categories: ["Sports", "Team competitive"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION, Platform.NINTENDO_SWITCH] },
   { name: "ARK: Survival Evolved", sourceRank: 43, description: "Dinosaur survival crafting, taming, and tribe progression.", categories: ["Survival crafting", "Dedicated-server game"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION], supportsDedicatedServers: true },
   { name: "Satisfactory", sourceRank: 44, description: "Cooperative factory building and automation sandbox.", categories: ["Sandbox", "Cooperative campaign", "Dedicated-server game"], platforms: [Platform.PC], supportsDedicatedServers: true },
-  { name: "Valheim", sourceRank: 45, description: "Viking survival crafting with co-op boss progression and long-term worlds.", categories: ["Survival crafting", "Cooperative campaign", "Dedicated-server game"], platforms: [Platform.PC, Platform.XBOX, Platform.CROSS_PLATFORM], supportsDedicatedServers: true, supportsCrossplay: true },
+  { name: "Valheim", sourceRank: 45, ...steamCover(892970, "bg-gradient-to-br from-amber-500 via-teal-900 to-slate-950"), description: "Viking survival crafting with co-op boss progression and long-term worlds.", categories: ["Survival crafting", "Cooperative campaign", "Dedicated-server game"], platforms: [Platform.PC, Platform.XBOX, Platform.CROSS_PLATFORM], supportsDedicatedServers: true, supportsCrossplay: true },
   { name: "Where Winds Meet", sourceRank: 46, description: "Open-world action RPG with online multiplayer interest.", categories: ["Action RPG", "MMO"], platforms: [Platform.PC, Platform.PLAYSTATION] },
   { name: "Hunt: Showdown 1896", sourceRank: 47, description: "Extraction shooter with cooperative teams.", aliases: ["Hunt Showdown"], categories: ["Extraction", "Tactical shooter"], platforms: [Platform.PC, Platform.XBOX, Platform.PLAYSTATION] },
   { name: "Shift At Midnight", sourceRank: 48, description: "Multiplayer catalog entry from the captured Steam co-op ranking.", categories: [], platforms: [Platform.PC] },

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { GameCover } from "@/components/GameCover";
 import { PostCard } from "@/components/PostCard";
 import { prisma } from "@/lib/db";
 
@@ -11,6 +12,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
     include: {
       platforms: true,
       editions: true,
+      categories: { include: { category: true } },
       posts: {
         where: { status: "ACTIVE" },
         include: { game: true, owner: { include: { profile: true } } },
@@ -23,7 +25,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
   return (
     <div className="container grid gap-6 py-8">
       <section className="panel overflow-hidden">
-        <div className={`h-44 ${game.fallbackGradient}`} aria-hidden />
+        <GameCover game={game} className="h-52" imageSizes="(max-width: 768px) 100vw, 900px" initialsClassName="text-5xl" />
         <div className="grid gap-3 p-6">
           <h1 className="text-4xl font-black">{game.name}</h1>
           <p className="max-w-3xl text-[var(--muted)]">{game.description}</p>
@@ -31,6 +33,11 @@ export default async function GameDetailPage({ params }: { params: Promise<{ slu
             {game.platforms.map((entry) => (
               <span className="tag" key={entry.id}>
                 {entry.platform.replaceAll("_", " ")}
+              </span>
+            ))}
+            {game.categories.map(({ category }) => (
+              <span className="tag" key={category.slug}>
+                {category.name}
               </span>
             ))}
             {game.modSupport ? <span className="tag">Mod support</span> : null}

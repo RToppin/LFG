@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { GameCover } from "@/components/GameCover";
 import { PostCard } from "@/components/PostCard";
 import { prisma } from "@/lib/db";
 
@@ -49,11 +50,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         <h2 className="text-2xl font-black">Games</h2>
         <div className="grid-auto">
           {profile.games.map((entry) => (
-            <Link className="card p-4" href={`/games/${entry.game.slug}`} key={entry.id}>
-              <h3 className="font-black">{entry.game.name}</h3>
-              <p className="muted text-sm">
-                {entry.platform.replaceAll("_", " ")} · {entry.experience} · {entry.canHost ? "Can host" : "Cannot host"}
-              </p>
+            <Link className="card overflow-hidden" href={`/games/${entry.game.slug}`} key={entry.id}>
+              <GameCover game={entry.game} className="h-20" imageSizes="(max-width: 768px) 100vw, 280px" initialsClassName="text-lg" />
+              <div className="p-4">
+                <h3 className="font-black">{entry.game.name}</h3>
+                <p className="muted text-sm">
+                  {entry.platform.replaceAll("_", " ")} | {entry.experience} | {entry.canHost ? "Can host" : "Cannot host"}
+                </p>
+              </div>
             </Link>
           ))}
         </div>

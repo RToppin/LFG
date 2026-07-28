@@ -2,6 +2,7 @@
 
 import { Search, X } from "lucide-react";
 import Link from "next/link";
+import { GameCover } from "@/components/GameCover";
 import { useMemo, useState } from "react";
 import type { CatalogGameForSelector } from "@/lib/game-catalog";
 
@@ -105,9 +106,7 @@ export function GameSelector({
               role="option"
               type="button"
             >
-              <span className={`grid size-12 place-items-center rounded-lg text-sm font-black ${game.fallbackGradient}`}>
-                {initials(game.name)}
-              </span>
+              <GameCover game={game} className="size-12 rounded-lg" imageSizes="48px" initialsClassName="text-sm" />
               <span className="grid gap-1">
                 <span className="font-black">{game.name}</span>
                 <span className="text-xs text-[var(--muted)]">
@@ -143,10 +142,3 @@ export function GameSelector({
   );
 }
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}

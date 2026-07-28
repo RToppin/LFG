@@ -1,5 +1,6 @@
 import { Clock, Users } from "lucide-react";
 import Link from "next/link";
+import { GameCover } from "@/components/GameCover";
 import { DURATION_LABELS, HOSTING_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 import { freshnessLabel } from "@/lib/time";
 
@@ -13,7 +14,7 @@ type PostCardPost = {
   currentGroupSize: number;
   maxPlayers: number;
   expiresAt: Date | null;
-  game: { name: string; fallbackGradient: string };
+  game: { name: string; coverImageUrl?: string | null; fallbackGradient: string };
   owner: { profile: { username: string; displayName: string } | null; name: string | null };
 };
 
@@ -27,7 +28,7 @@ export function PostCard({
   const openSlots = Math.max(0, post.maxPlayers - post.currentGroupSize);
   return (
     <article className="card overflow-hidden">
-      <div className={`h-20 ${post.game.fallbackGradient}`} aria-hidden />
+      <GameCover game={post.game} className="h-20" imageSizes="(max-width: 768px) 100vw, 360px" initialsClassName="text-xl" />
       <div className="grid gap-3 p-4">
         <div>
           <p className="muted text-sm">{post.game.name}</p>
@@ -53,8 +54,8 @@ export function PostCard({
           </span>
         </div>
         <p className="text-sm text-[var(--muted)]">
-          {PLATFORM_LABELS[post.platform as keyof typeof PLATFORM_LABELS]} ·{" "}
-          {HOSTING_LABELS[post.hostingStatus as keyof typeof HOSTING_LABELS]} ·{" "}
+          {PLATFORM_LABELS[post.platform as keyof typeof PLATFORM_LABELS]} |{" "}
+          {HOSTING_LABELS[post.hostingStatus as keyof typeof HOSTING_LABELS]} |{" "}
           {DURATION_LABELS[post.durationType as keyof typeof DURATION_LABELS]}
         </p>
         {match ? (

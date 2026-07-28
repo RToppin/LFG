@@ -155,14 +155,16 @@ async function upsertCatalogGame(game: Omit<SeedCatalogGame, "sourceRank"> & { s
         { aliases: { hasSome: aliasesFor(game.name, game.aliases) } }
       ]
     },
-    select: { id: true, aliases: true }
+    select: { id: true, aliases: true, coverImageUrl: true, steamAppId: true, fallbackGradient: true }
   });
   const data = {
     name: game.name,
     slug,
     shortName: game.shortName ?? null,
     description: game.description,
-    fallbackGradient: stableGameGradient(slug),
+    coverImageUrl: game.coverImageUrl ?? existing?.coverImageUrl ?? null,
+    steamAppId: game.steamAppId ?? existing?.steamAppId ?? null,
+    fallbackGradient: game.fallbackGradient ?? existing?.fallbackGradient ?? stableGameGradient(slug),
     source,
     sourceRank: game.sourceRank ?? null,
     approvalStatus: "APPROVED" as const,

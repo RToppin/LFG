@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { mergeGamesAction, reviewGameRequest, setGameCatalogState, upsertAdminGame } from "@/app/actions";
 import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
+import { GameCover } from "@/components/GameCover";
 import { canModerate } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 import { GAME_CATEGORIES } from "@/lib/steam-catalog";
@@ -138,13 +139,16 @@ export default async function AdminGamesPage({ searchParams }: { searchParams: P
         {games.map((game) => (
           <div className="grid gap-3 border-b border-[var(--line)] py-3" key={game.id}>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <strong>{game.name}</strong>
-                <p className="muted text-sm">
-                  {game.approvalStatus} | {game.isActive ? "Active" : "Inactive"} | {game.listingEnabled ? "Listings enabled" : "Listings disabled"} | {game.source}{game.sourceRank ? ` #${game.sourceRank}` : ""}
-                </p>
-                <p className="muted text-sm">Profiles: {game._count.userGames} | Active posts: {game._count.posts}</p>
-                <div className="mt-2 flex flex-wrap gap-1">{game.categories.map(({ category }) => <span className="tag" key={category.slug}>{category.name}</span>)}</div>
+              <div className="flex min-w-0 items-center gap-3">
+                <GameCover game={game} className="size-16 rounded-lg" imageSizes="64px" initialsClassName="text-base" />
+                <div>
+                  <strong>{game.name}</strong>
+                  <p className="muted text-sm">
+                    {game.approvalStatus} | {game.isActive ? "Active" : "Inactive"} | {game.listingEnabled ? "Listings enabled" : "Listings disabled"} | {game.source}{game.sourceRank ? ` #${game.sourceRank}` : ""}
+                  </p>
+                  <p className="muted text-sm">Profiles: {game._count.userGames} | Active posts: {game._count.posts}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">{game.categories.map(({ category }) => <span className="tag" key={category.slug}>{category.name}</span>)}</div>
+                </div>
               </div>
               {session.user.role === "ADMIN" ? (
                 <div className="flex flex-wrap gap-2">

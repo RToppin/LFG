@@ -5,6 +5,7 @@ import { addUserGame, removeUserGame } from "@/app/actions";
 import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
 import { ExperienceSelect, PlatformSelect, PlayStyleChecks } from "@/components/FormControls";
+import { GameCover } from "@/components/GameCover";
 import { GameSelector } from "@/components/GameSelector";
 import { prisma } from "@/lib/db";
 import { getApprovedGamesForSelection } from "@/lib/game-catalog";
@@ -52,11 +53,17 @@ export default async function GameSettingsPage() {
       </section>
       <section className="grid-auto">
         {profile.games.map((entry) => (
-          <div className="card p-4" key={entry.id}>
-            <h2 className="font-black">{entry.game.name}</h2>
-            <p className="muted text-sm">{entry.platform.replaceAll("_", " ")} · {entry.experience}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {entry.playStyles.map((tag) => <span className="tag" key={tag}>{tag}</span>)}
+          <div className="card overflow-hidden" key={entry.id}>
+            <GameCover game={entry.game} className="h-24" imageSizes="(max-width: 768px) 100vw, 320px" initialsClassName="text-xl" />
+            <div className="grid gap-2 p-4">
+              <h2 className="font-black">{entry.game.name}</h2>
+              <p className="muted text-sm">{entry.platform.replaceAll("_", " ")} | {entry.experience}</p>
+              <div className="flex flex-wrap gap-2">
+                {entry.playStyles.map((tag) => <span className="tag" key={tag}>{tag}</span>)}
+              </div>
+              <form action={async () => { "use server"; await removeUserGame(entry.id); }}>
+                <button className="btn secondary" type="submit">Remove</button>
+              </form>
             </div>
           </div>
         ))}

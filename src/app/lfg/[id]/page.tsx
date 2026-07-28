@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { closePost, joinOrRequestPost, refreshPost, submitReport, toggleSavePost, decideJoinRequest } from "@/app/actions";
 import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
+import { GameCover } from "@/components/GameCover";
 import { DURATION_LABELS, HOSTING_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 import { formatViewerTime, freshnessLabel } from "@/lib/time";
@@ -37,7 +38,7 @@ export default async function LfgDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div className="container grid gap-6 py-8">
       <section className="panel overflow-hidden">
-        <div className={`h-36 ${post.game.fallbackGradient}`} aria-hidden />
+        <GameCover game={post.game} className="h-40" imageSizes="(max-width: 768px) 100vw, 900px" initialsClassName="text-4xl" />
         <div className="grid gap-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
