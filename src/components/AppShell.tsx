@@ -14,7 +14,7 @@ const nav = [
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const isStaff = session?.user.role === "ADMIN" || session?.user.role === "MODERATOR";
+  const isStaff = session?.user?.role === "ADMIN" || session?.user?.role === "MODERATOR";
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
       <aside className="desktop-only border-r border-[var(--line)] bg-[#0b1018]/90 p-5">

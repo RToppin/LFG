@@ -56,10 +56,25 @@ if (isTestAuthEnabled()) {
   );
 }
 
+async function getSessionShape(userId: string) {
+  const [profile, dbUser] = await Promise.all([
+    prisma.profile.findUnique({
+      where: { userId },
+      select: { username: true }
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+  ]);
+  return {
+    role: dbUser?.role ?? "USER",
+    username: profile?.username ?? null,
+    onboarded: Boolean(profile)
+  };
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers,
-  session: { strategy: "database" },
+  session: { strategy: isTestAuthEnabled() ? "jwt" : "database" },
   pages: { signIn: "/login" },
   callbacks: {
     async signIn({ user, account, profile }) {
@@ -77,18 +92,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async session({ session, user }) {
-      const [profile, dbUser] = await Promise.all([
-        prisma.profile.findUnique({
-          where: { userId: user.id },
-          select: { username: true }
-        }),
-        prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
-      ]);
-      session.user.id = user.id;
-      session.user.role = dbUser?.role ?? "USER";
-      session.user.username = profile?.username;
-      session.user.onboarded = Boolean(profile);
+    async jwt({ token, user }) {
+      const userId = user?.id ?? (typeof token.id === "string" ? token.id : undefined);
+      if (!userId) return token;
+      const shape = await getSessionShape(userId);
+      token.id = userId;
+      token.role = shape.role;
+      token.username = shape.username;
+      token.onboarded = shape.onboarded;
+      return token;
+    },
+    async session({ session, token, user }) {
+      const userId = (typeof token?.id === "string" ? token.id : undefined) ?? user?.id;
+      if (!userId) return session;
+      const role = typeof token?.role === "string" ? token.role : (await getSessionShape(userId)).role;
+      session.user.id = userId;
+      session.user.role = role;
+      session.user.username = typeof token?.username === "string" ? token.username : null;
+      session.user.onboarded = Boolean(token?.onboarded);
       return session;
     }
   }

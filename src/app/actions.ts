@@ -21,11 +21,11 @@ export async function signInWithDiscord() {
 }
 
 export async function signInWithDevUser(formData: FormData) {
-  await signIn("credentials", {
-    email: String(formData.get("email") ?? ""),
-    name: String(formData.get("name") ?? ""),
-    redirectTo: "/dashboard"
-  });
+  const credentials = new FormData();
+  credentials.set("email", String(formData.get("email") ?? ""));
+  credentials.set("name", String(formData.get("name") ?? ""));
+  credentials.set("redirectTo", "/dashboard");
+  await signIn("credentials", credentials);
 }
 
 export async function signOutAction() {
