@@ -5,5 +5,5 @@ test("public navigation surfaces core routes", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Looking For Group" })).toBeVisible();
   await page.getByRole("link", { name: /Discover groups/i }).click();
   await expect(page).toHaveURL(/\/discover/);
-  await expect(page.getByRole("heading", { name: "Discover" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Find a group" })).toBeVisible();
 });

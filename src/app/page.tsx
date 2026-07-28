@@ -17,15 +17,15 @@ export default async function HomePage() {
       <section className="grid gap-7 py-8 lg:grid-cols-[1fr_0.85fr] lg:items-end">
         <div className="grid gap-5">
           <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">Looking for Group</p>
-          <h1 className="max-w-4xl text-4xl font-black leading-tight md:text-6xl" aria-label="Looking For Group">
+          <h1 className="max-w-4xl text-5xl font-black leading-tight md:text-7xl" aria-label="Looking For Group">
             <span aria-hidden="true" className="inline-flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span><span className="text-6xl md:text-8xl">L</span>ooking</span>
-              <span><span className="text-6xl md:text-8xl">F</span>or</span>
-              <span><span className="text-6xl md:text-8xl">G</span>roup</span>
+              <span><span className="text-[1.12em] text-[var(--accent)]">L</span>ooking</span>
+              <span><span className="text-[1.12em] text-[var(--accent)]">F</span>or</span>
+              <span><span className="text-[1.12em] text-[var(--accent)]">G</span>roup</span>
             </span>
           </h1>
           <p className="max-w-2xl text-lg text-[var(--muted)]">
-            Discover compatible co-op players, publish fresh group listings, and move the actual conversation to Discord
+            Pick a game, scan open groups, and move the actual conversation to Discord
             only after the group makes sense.
           </p>
           <div className="flex flex-wrap gap-3">

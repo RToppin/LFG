@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 type GameCoverGame = {
   name: string;
   coverImage?: string | null;
@@ -10,7 +8,6 @@ type GameCoverGame = {
 export function GameCover({
   game,
   className = "h-28",
-  imageSizes = "(max-width: 768px) 100vw, 360px",
   initialsClassName = "text-2xl"
 }: {
   game: GameCoverGame;
@@ -21,15 +18,17 @@ export function GameCover({
   const source = game.coverImageUrl ?? game.coverImage;
 
   return (
-    <div className={`relative grid place-items-center overflow-hidden ${className} ${game.fallbackGradient}`}>
-      {source ? (
-        <>
-          <Image alt="" className="object-cover" fill sizes={imageSizes} src={source} />
-          <span className="absolute inset-0 bg-gradient-to-t from-[#070b10]/75 via-[#070b10]/10 to-transparent" aria-hidden />
-        </>
-      ) : (
-        <span className={`font-black text-white drop-shadow ${initialsClassName}`}>{initials(game.name)}</span>
-      )}
+    <div
+      className={`relative grid place-items-center overflow-hidden bg-cover bg-center ${className} ${game.fallbackGradient}`}
+      style={
+        source
+          ? {
+              backgroundImage: `linear-gradient(to top, rgba(7, 11, 16, 0.74), rgba(7, 11, 16, 0.08)), url("${source}")`
+            }
+          : undefined
+      }
+    >
+      {!source ? <span className={`font-black text-white drop-shadow ${initialsClassName}`}>{initials(game.name)}</span> : null}
     </div>
   );
 }

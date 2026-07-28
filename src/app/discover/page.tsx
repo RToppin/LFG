@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { Platform } from "@prisma/client";
 import { Search } from "lucide-react";
+import Link from "next/link";
 import { PostCard } from "@/components/PostCard";
 import { DiscoverGameFilter } from "@/components/DiscoverGameFilter";
 import { auth } from "@/auth";
@@ -17,6 +18,7 @@ export default async function DiscoverPage({
   const session = await auth();
   const q = params.q?.trim();
   const approvedGames = await getApprovedGamesForSelection({ withCounts: true });
+  const selectedGame = params.game ? approvedGames.find((game) => game.slug === params.game) : null;
   const posts = await prisma.lfgPost.findMany({
     where: {
       status: "ACTIVE",
@@ -59,62 +61,88 @@ export default async function DiscoverPage({
     <div className="container grid gap-6 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black">Discover</h1>
-          <p className="muted">Filter fresh LFG posts and inspect why recommendations fit.</p>
+          <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">Live feed</p>
+          <h1 className="text-3xl font-black">Find a group</h1>
+          <p className="muted">Choose a game and scan the open groups available right now.</p>
         </div>
-        <form className="flex flex-wrap gap-2">
-          <input className="input w-64" name="q" defaultValue={q} placeholder="Search titles, descriptions, tags" />
-          <DiscoverGameFilter games={approvedGames} selectedSlug={params.game} />
-          <select className="input w-44" name="platform" defaultValue={params.platform ?? ""}>
-            <option value="">Any platform</option>
-            {Object.values(Platform).map((platform) => (
-              <option key={platform} value={platform}>
-                {platform.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
-          <select className="input w-44" name="sort" defaultValue={params.sort ?? ""}>
-            <option value="">Recently refreshed</option>
-            <option value="starting-soon">Starting soon</option>
-            <option value="open-slots">Most open spots</option>
-          </select>
-          <button className="btn" type="submit">
-            <Search size={18} aria-hidden />
-            Search
-          </button>
-          <a className="btn secondary" href="/discover">
-            Reset
-          </a>
-        </form>
+        <Link className="btn" href="/lfg/new">Create a group</Link>
       </div>
-      {posts.length ? (
-        <div className="grid-auto">
-          {posts.map((post) => {
-            const match =
-              profile && session?.user.id
-                ? calculateMatchScore(
-                    {
-                      games: profile.games,
-                      languages: profile.languages,
-                      playStyles: profile.playStyles,
-                      availability: profile.availabilitySlots,
-                      blockedUserIds: blocks.map((block) =>
-                        block.blockerId === session.user.id ? block.blockedId : block.blockerId
+
+      <div className="grid gap-5 lg:grid-cols-[22rem_1fr] lg:items-start">
+        <form className="panel grid gap-4 p-4">
+          <DiscoverGameFilter games={approvedGames} selectedSlug={params.game} />
+          <div className="grid gap-3 border-t border-[var(--line)] pt-4">
+            <label className="field">
+              <span>Search open groups</span>
+              <input className="input" name="q" defaultValue={q} placeholder="Title, description, modpack" />
+            </label>
+            <label className="field">
+              <span>Platform</span>
+              <select className="input" name="platform" defaultValue={params.platform ?? ""}>
+                <option value="">Any platform</option>
+                {Object.values(Platform).map((platform) => (
+                  <option key={platform} value={platform}>
+                    {platform.replaceAll("_", " ")}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Sort</span>
+              <select className="input" name="sort" defaultValue={params.sort ?? ""}>
+                <option value="">Recently refreshed</option>
+                <option value="starting-soon">Starting soon</option>
+                <option value="open-slots">Most open spots</option>
+              </select>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button className="btn" type="submit">
+                <Search size={18} aria-hidden />
+                Update feed
+              </button>
+              <Link className="btn secondary" href="/discover">Reset</Link>
+            </div>
+          </div>
+        </form>
+
+        <section className="grid gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-black">{selectedGame ? `${selectedGame.name} groups` : "Open groups"}</h2>
+              <p className="muted">{posts.length} active {posts.length === 1 ? "group" : "groups"}</p>
+            </div>
+            {selectedGame ? <Link className="btn secondary" href={`/games/${selectedGame.slug}`}>Game page</Link> : null}
+          </div>
+          {posts.length ? (
+            <div className="grid-auto">
+              {posts.map((post) => {
+                const match =
+                  profile && session?.user.id
+                    ? calculateMatchScore(
+                        {
+                          games: profile.games,
+                          languages: profile.languages,
+                          playStyles: profile.playStyles,
+                          availability: profile.availabilitySlots,
+                          blockedUserIds: blocks.map((block) =>
+                            block.blockerId === session.user.id ? block.blockedId : block.blockerId
+                          )
+                        },
+                        post,
+                        session.user.id
                       )
-                    },
-                    post,
-                    session.user.id
-                  )
-                : undefined;
-            return <PostCard key={post.id} post={post} match={match} />;
-          })}
-        </div>
-      ) : (
-        <div className="panel p-8 text-center">
-          <p className="font-black">No active posts match those filters.</p>
-          <p className="muted">Reset filters or create the first group for your game.</p>
-        </div>
-      )}
+                    : undefined;
+                return <PostCard key={post.id} post={post} match={match} />;
+              })}
+            </div>
+          ) : (
+            <div className="panel p-8 text-center">
+              <p className="font-black">No open groups match those filters.</p>
+              <p className="muted">Start the first group for this game or reset the feed.</p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
