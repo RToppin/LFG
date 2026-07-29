@@ -8,6 +8,7 @@ import { PlatformSelect, PlayStyleChecks, VisibilitySelect } from "@/components/
 export default async function OnboardingPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
+  if (session.user.onboarded) redirect("/dashboard");
   return (
     <div className="container py-8">
       <section className="panel grid gap-5 p-6">
@@ -16,6 +17,7 @@ export default async function OnboardingPage() {
           <p className="muted">Required fields get recommendations working; optional fields can be edited later.</p>
         </div>
         <ActionForm action={saveProfile} submitLabel="Finish onboarding">
+          <input name="redirectTo" type="hidden" value="/dashboard" />
           <div className="grid-auto">
             <label className="field">
               <span>Username</span>

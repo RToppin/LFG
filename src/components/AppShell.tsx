@@ -2,6 +2,7 @@ import { Gamepad2 } from "lucide-react";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions";
 import { auth } from "@/auth";
+import { BackButton } from "@/components/BackButton";
 import { NavLinks, type NavItem } from "@/components/NavLinks";
 
 const nav: NavItem[] = [
@@ -47,7 +48,10 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
       </aside>
-      <main className="pb-20 md:pb-0">{children}</main>
+      <main className="pb-20 md:pb-0">
+        <BackButton />
+        {children}
+      </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-[var(--line)] bg-[#0b1018] md:hidden">
         <NavLinks items={nav.slice(0, 5)} variant="mobile" />
       </nav>

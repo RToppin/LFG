@@ -105,11 +105,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token, user }) {
       const userId = (typeof token?.id === "string" ? token.id : undefined) ?? user?.id;
       if (!userId) return session;
-      const role = typeof token?.role === "string" ? token.role : (await getSessionShape(userId)).role;
+      const shape = await getSessionShape(userId);
+      const role = typeof token?.role === "string" ? token.role : shape.role;
       session.user.id = userId;
       session.user.role = role;
-      session.user.username = typeof token?.username === "string" ? token.username : null;
-      session.user.onboarded = Boolean(token?.onboarded);
+      session.user.username = typeof token?.username === "string" ? token.username : shape.username;
+      session.user.onboarded = typeof token?.onboarded === "boolean" ? token.onboarded : shape.onboarded;
       return session;
     }
   }

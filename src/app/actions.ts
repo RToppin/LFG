@@ -47,6 +47,12 @@ function checkbox(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
 }
 
+function safeAppRedirectPath(value: FormDataEntryValue | null) {
+  const path = String(value ?? "");
+  if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/api/")) return null;
+  return path;
+}
+
 function deriveServerRegion(timeZone: string) {
   const area = timeZone.split("/")[0]?.replaceAll("_", " ") || "Global";
   if (area === "America") return "North America";
@@ -123,6 +129,8 @@ export async function saveProfile(_: ActionState, formData: FormData): Promise<A
       }
     });
     revalidatePath("/dashboard");
+    const redirectTo = safeAppRedirectPath(formData.get("redirectTo"));
+    if (redirectTo) redirect(redirectTo);
     return { ok: true, message: "Profile saved." };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
