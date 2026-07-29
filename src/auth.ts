@@ -1,18 +1,23 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth, { type DefaultSession } from "next-auth";
+import NextAuth, { type DefaultSession, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { prisma } from "@/lib/db";
 import { isTestAuthEnabled } from "@/lib/env";
 
+type AuthSessionUser = DefaultSession["user"] & {
+  id: string;
+  role: string;
+  status: string;
+  username?: string | null;
+  onboarded: boolean;
+};
+
+type AppSession = Omit<Session, "user"> & { user: AuthSessionUser };
+
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string;
-      role: string;
-      username?: string | null;
-      onboarded: boolean;
-    } & DefaultSession["user"];
+    user: AuthSessionUser;
   }
 }
 
@@ -50,6 +55,7 @@ if (isTestAuthEnabled()) {
             preferences: { create: {} }
           }
         });
+        if (user.status !== "ACTIVE") return null;
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       }
     })
@@ -62,10 +68,11 @@ async function getSessionShape(userId: string) {
       where: { userId },
       select: { username: true }
     }),
-    prisma.user.findUnique({ where: { id: userId }, select: { role: true } })
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true, status: true } })
   ]);
   return {
     role: dbUser?.role ?? "USER",
+    status: dbUser?.status ?? "ACTIVE",
     username: profile?.username ?? null,
     onboarded: Boolean(profile)
   };
@@ -78,6 +85,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login" },
   callbacks: {
     async signIn({ user, account, profile }) {
+      if (user.id) {
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
+        if (dbUser?.status && dbUser.status !== "ACTIVE") return false;
+      }
       if (account?.provider === "discord" && user.id) {
         await prisma.profile.updateMany({
           where: { userId: user.id },
@@ -98,6 +109,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const shape = await getSessionShape(userId);
       token.id = userId;
       token.role = shape.role;
+      token.status = shape.status;
       token.username = shape.username;
       token.onboarded = shape.onboarded;
       return token;
@@ -109,9 +121,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const role = typeof token?.role === "string" ? token.role : shape.role;
       session.user.id = userId;
       session.user.role = role;
+      session.user.status = typeof token?.status === "string" ? token.status : shape.status;
       session.user.username = typeof token?.username === "string" ? token.username : shape.username;
       session.user.onboarded = typeof token?.onboarded === "boolean" ? token.onboarded : shape.onboarded;
       return session;
     }
   }
 });
+
