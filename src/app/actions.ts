@@ -47,6 +47,10 @@ function checkbox(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
 }
 
+function optionalFormString(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "");
+}
+
 function safeAppRedirectPath(value: FormDataEntryValue | null) {
   const path = String(value ?? "");
   if (!path.startsWith("/") || path.startsWith("//") || path.startsWith("/api/")) return null;
@@ -202,23 +206,23 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
     durationType: formData.get("durationType"),
     joinMode: "OPEN",
     edition: "",
-    serverRegion: formData.get("serverRegion"),
-    recurringSchedule: formData.get("recurringSchedule"),
+    serverRegion: optionalFormString(formData, "serverRegion"),
+    recurringSchedule: optionalFormString(formData, "recurringSchedule"),
     daysOfWeek: formList(formData, "daysOfWeek"),
-    sessionLength: formData.get("sessionLength"),
+    sessionLength: optionalFormString(formData, "sessionLength"),
     modded: checkbox(formData, "modded"),
-    modpackName: formData.get("modpackName"),
-    difficulty: formData.get("difficulty"),
-    progressionStage: formData.get("progressionStage"),
+    modpackName: optionalFormString(formData, "modpackName"),
+    difficulty: optionalFormString(formData, "difficulty"),
+    progressionStage: optionalFormString(formData, "progressionStage"),
     requestedExperience: formData.get("requestedExperience"),
     microphoneRequired: checkbox(formData, "microphoneRequired"),
-    preferredLanguage: formData.get("preferredLanguage"),
+    preferredLanguage: optionalFormString(formData, "preferredLanguage"),
     minimumAge: "13",
-    serverRules: formData.get("serverRules"),
+    serverRules: optionalFormString(formData, "serverRules"),
     existingWorld: checkbox(formData, "existingWorld"),
     waitlistEnabled: checkbox(formData, "waitlistEnabled"),
     autoCloseWhenFull: checkbox(formData, "autoCloseWhenFull"),
-    discordInvite: formData.get("discordInvite"),
+    discordInvite: optionalFormString(formData, "discordInvite"),
     discordInviteVisibility: formData.get("discordInviteVisibility") || "PUBLIC",
     publish: formData.get("intent") !== "draft"
   });
