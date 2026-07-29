@@ -54,7 +54,7 @@ docker compose up -d
 ```bash
 npm run db:generate
 npm run db:migrate
-npm run db:seed
+npm run db:seed:demo
 ```
 
 5. Start the app:
@@ -95,10 +95,16 @@ OAuth access tokens are stored server-side by Auth.js and are never exposed to b
 
 LFG only accepts LFG posts and profile game preferences for existing approved `Game` records. A game can receive new listings when `approvalStatus = APPROVED`, `isActive = true`, and `listingEnabled = true`; server actions re-check those flags so users cannot submit arbitrary typed names or tampered game IDs.
 
-The seed script preserves existing catalog data and upserts the pre-approved catalog idempotently:
+The default seed script is production-safe: it preserves existing catalog data and upserts only the pre-approved catalog idempotently:
 
 ```bash
 npm run db:seed
+```
+
+For local demo users, profiles, posts, and notifications:
+
+```bash
+npm run db:seed:demo
 ```
 
 The initial ranked Steam catalog is a captured seed list from July 28, 2026. It stores `source = STEAM` and `sourceRank`, but it does not store live player counts or imply a current ranking. Manually curated non-Steam games such as Minecraft use `source = CURATED`. Steam App IDs are nullable and are intentionally left empty unless verified through an authoritative source already available to the project.

@@ -3,8 +3,11 @@ import { GameSource, Platform, PrismaClient } from "@prisma/client";
 import { calculateExpirationDate } from "../src/lib/time";
 import { CATALOG_SOURCE_DATE, GAME_CATEGORIES, STEAM_COOP_CATALOG, type SeedCatalogGame } from "../src/lib/steam-catalog";
 
+process.loadEnvFile?.();
+
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "postgresql://lfg:lfg@localhost:5432/lfg?schema=public" });
 const prisma = new PrismaClient({ adapter });
+const includeDemoData = process.argv.includes("--demo") || process.env.SEED_DEMO_DATA === "true";
 
 const curatedGames: Array<Omit<SeedCatalogGame, "sourceRank"> & { source: GameSource }> = [
   {
@@ -66,6 +69,12 @@ async function main() {
     const existed = await upsertCatalogGame(game, "STEAM");
     if (existed) summary.approvedGamesUpdated += 1;
     else summary.approvedGamesCreated += 1;
+  }
+
+  if (!includeDemoData) {
+    logCatalogSummary(summary);
+    console.log("Demo users and posts skipped. Run `npm run db:seed:demo` for local demo data.");
+    return;
   }
 
   const alex = await upsertPlayer("alex@example.com", "Alex", "alex", "Alex", "USER");
@@ -138,6 +147,16 @@ async function main() {
     skipDuplicates: true
   });
 
+  logCatalogSummary(summary);
+  console.log("Demo users and posts seeded.");
+}
+
+function logCatalogSummary(summary: {
+  approvedGamesCreated: number;
+  approvedGamesUpdated: number;
+  existingCuratedGamesPreserved: number;
+  duplicatesSkipped: number;
+}) {
   console.log(`Approved game catalog source date: ${CATALOG_SOURCE_DATE}`);
   console.log(`Approved games created: ${summary.approvedGamesCreated}`);
   console.log(`Approved games updated: ${summary.approvedGamesUpdated}`);
