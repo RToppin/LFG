@@ -11,6 +11,19 @@ import { isDiscordInvite } from "@/lib/discord";
 
 const enumValues = <T extends Record<string, string>>(value: T) => Object.values(value) as [T[keyof T], ...T[keyof T][]];
 
+const httpUrl = z.string().trim().superRefine((value, ctx) => {
+  if (!value) return;
+
+  try {
+    const protocol = new URL(value).protocol;
+    if (protocol !== "http:" && protocol !== "https:") {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use an http or https URL." });
+    }
+  } catch {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Use an http or https URL." });
+  }
+});
+
 export const profileSchema = z.object({
   username: z
     .string()
@@ -97,7 +110,7 @@ export const reportSchema = z.object({
 
 export const gameRequestSchema = z.object({
   requestedName: z.string().min(2).max(120),
-  steamStoreUrl: z.string().url().optional().or(z.literal("")),
+  steamStoreUrl: httpUrl.optional().or(z.literal("")),
   notes: z.string().max(1000).optional().or(z.literal(""))
 });
 
@@ -105,7 +118,7 @@ export const adminGameSchema = z.object({
   name: z.string().min(2).max(120),
   shortName: z.string().max(40).optional().or(z.literal("")),
   description: z.string().min(10).max(1000),
-  coverImageUrl: z.string().url().optional().or(z.literal("")),
+  coverImageUrl: httpUrl.optional().or(z.literal("")),
   aliases: z.array(z.string().min(1)).default([]),
   platforms: z.array(z.enum(enumValues(Platform))).min(1),
   categories: z.array(z.string()).default([]),
@@ -117,5 +130,19 @@ export const adminGameSchema = z.object({
   supportsCrossplay: z.boolean().default(false),
   minimumPlayers: z.coerce.number().int().min(1).max(100).optional().nullable(),
   maximumPlayers: z.coerce.number().int().min(1).max(1000).optional().nullable()
+});
+export const projectZomboidSocialPostSchema = z.object({
+  gameId: z.string().min(1),
+  body: z.string().min(1).max(1000),
+  imageUrl: httpUrl.optional().or(z.literal("")),
+  characterName: z.string().min(1).max(80),
+  zombieKills: z.coerce.number().int().min(0).max(1_000_000),
+  daysSurvived: z.coerce.number().int().min(0).max(100_000),
+  gameSettings: z.string().min(1).max(1000)
+});
+
+export const socialCommentSchema = z.object({
+  postId: z.string().min(1),
+  body: z.string().min(1).max(500)
 });
 
