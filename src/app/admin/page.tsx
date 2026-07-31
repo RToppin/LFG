@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { canModerate } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { isMissingPrismaTableError } from "@/lib/prisma-errors";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -12,7 +13,7 @@ export default async function AdminPage() {
     prisma.report.count({ where: { status: "OPEN" } }),
     prisma.user.count(),
     prisma.game.count(),
-    prisma.socialPost.count({ where: { imageStatus: "PENDING" } })
+    countPendingSocialImages()
   ]);
   return (
     <div className="container grid gap-6 py-8">
@@ -25,4 +26,13 @@ export default async function AdminPage() {
       </div>
     </div>
   );
+}
+
+async function countPendingSocialImages() {
+  try {
+    return await prisma.socialPost.count({ where: { imageStatus: "PENDING" } });
+  } catch (error) {
+    if (!isMissingPrismaTableError(error)) throw error;
+    return 0;
+  }
 }

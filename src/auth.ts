@@ -28,6 +28,7 @@ if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
       authorization: { params: { scope: "identify email" } }
     })
   );
@@ -81,8 +82,19 @@ async function getSessionShape(userId: string) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers,
+  trustHost: true,
   session: { strategy: isTestAuthEnabled() ? "jwt" : "database" },
   pages: { signIn: "/login" },
+  events: {
+    async createUser({ user }) {
+      if (!user.id) return;
+      await prisma.notificationPreference.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id },
+        update: {}
+      });
+    }
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (user.id) {
@@ -128,4 +140,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }
   }
 });
-

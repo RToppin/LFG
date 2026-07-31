@@ -1,18 +1,14 @@
 import Link from "next/link";
 import { GameCover } from "@/components/GameCover";
 import { prisma } from "@/lib/db";
+import { isMissingPrismaTableError } from "@/lib/prisma-errors";
 
 export default async function SocialPage() {
   const projectZomboid = await prisma.game.findFirst({
-    where: { slug: "project-zomboid", approvalStatus: "APPROVED", isActive: true },
-    include: { _count: { select: { socialPosts: { where: { status: "ACTIVE" } } } } }
+    where: { slug: "project-zomboid", approvalStatus: "APPROVED", isActive: true }
   });
-  const recentPosts = await prisma.socialPost.findMany({
-    where: { status: "ACTIVE" },
-    include: { game: true, author: { include: { profile: true } }, projectZomboidRun: true, _count: { select: { comments: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 12
-  });
+
+  const social = await loadSocialFeed();
 
   return (
     <div className="container grid max-w-5xl gap-0 py-8">
@@ -28,7 +24,7 @@ export default async function SocialPage() {
           <div className="grid gap-2 p-4">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-xl font-black">Project Zomboid</h2>
-              <span className="tag">{projectZomboid._count.socialPosts} posts</span>
+              <span className="tag">{social.projectZomboidPostCount} posts</span>
             </div>
             <p className="text-sm text-[var(--muted)]">Survival run stats, character stories, approved screenshots, and future leaderboard verification.</p>
           </div>
@@ -36,7 +32,9 @@ export default async function SocialPage() {
       ) : null}
 
       <section className="border border-[var(--line)]">
-        {recentPosts.length ? recentPosts.map((post) => (
+        {social.unavailable ? (
+          <div className="p-6 text-[var(--muted)]">Social is finishing setup. Check back after the current deployment finishes.</div>
+        ) : social.recentPosts.length ? social.recentPosts.map((post) => (
           <Link className="grid grid-cols-[3rem_1fr] gap-3 border-b border-[var(--line)] p-4 transition last:border-b-0 hover:bg-[#101824]" href={`/social/${post.game.slug}`} key={post.id}>
             <GameCover game={post.game} className="size-12 rounded-lg" initialsClassName="text-sm" />
             <div className="min-w-0">
@@ -62,4 +60,22 @@ export default async function SocialPage() {
       </section>
     </div>
   );
+}
+
+async function loadSocialFeed() {
+  try {
+    const [projectZomboidPostCount, recentPosts] = await Promise.all([
+      prisma.socialPost.count({ where: { status: "ACTIVE", game: { slug: "project-zomboid" } } }),
+      prisma.socialPost.findMany({
+        where: { status: "ACTIVE" },
+        include: { game: true, author: { include: { profile: true } }, projectZomboidRun: true, _count: { select: { comments: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 12
+      })
+    ]);
+    return { unavailable: false, projectZomboidPostCount, recentPosts };
+  } catch (error) {
+    if (!isMissingPrismaTableError(error)) throw error;
+    return { unavailable: true, projectZomboidPostCount: 0, recentPosts: [] };
+  }
 }

@@ -18,7 +18,7 @@ import { APPROVED_GAME_ERROR, findProbableGameMatch, mergeGames, normalizeGameSl
 type ActionState = { ok: boolean; message: string };
 
 export async function signInWithDiscord() {
-  await signIn("discord", { redirectTo: "/dashboard" });
+  await signIn("discord", { redirectTo: "/onboarding" });
 }
 
 export async function signInWithDevUser(formData: FormData) {
@@ -814,4 +814,3 @@ export async function mergeGamesAction(formData: FormData) {
   await mergeGames(String(formData.get("sourceGameId")), String(formData.get("targetGameId")), user.id);
   revalidatePath("/admin/games");
 }
-

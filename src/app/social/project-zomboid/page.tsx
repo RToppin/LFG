@@ -5,25 +5,15 @@ import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
 import { GameCover } from "@/components/GameCover";
 import { prisma } from "@/lib/db";
+import { isMissingPrismaTableError } from "@/lib/prisma-errors";
 
 export default async function ProjectZomboidSocialPage() {
   const session = await auth();
   const game = await prisma.game.findFirst({
-    where: { slug: "project-zomboid", approvalStatus: "APPROVED", isActive: true },
-    include: {
-      socialPosts: {
-        where: { status: "ACTIVE" },
-        include: {
-          author: { include: { profile: true } },
-          comments: { where: { deletedAt: null }, include: { author: { include: { profile: true } } }, orderBy: { createdAt: "asc" }, take: 8 },
-          projectZomboidRun: true
-        },
-        orderBy: { createdAt: "desc" },
-        take: 30
-      }
-    }
+    where: { slug: "project-zomboid", approvalStatus: "APPROVED", isActive: true }
   });
   if (!game) notFound();
+  const feed = await loadProjectZomboidFeed(game.id);
 
   return (
     <div className="container grid max-w-5xl gap-0 py-8">
@@ -38,7 +28,9 @@ export default async function ProjectZomboidSocialPage() {
         </div>
       </header>
 
-      {session?.user && session.user.status === "ACTIVE" ? (
+      {feed.unavailable ? (
+        <section className="border-x border-t border-[var(--line)] p-4 text-[var(--muted)]">Social is finishing setup. Check back after the current deployment finishes.</section>
+      ) : session?.user && session.user.status === "ACTIVE" ? (
         <section className="border-x border-t border-[var(--line)] bg-[#0d131c] p-4">
           <ActionForm action={createProjectZomboidSocialPost} className="grid gap-4" submitLabel="Post">
             <label className="field">
@@ -61,7 +53,7 @@ export default async function ProjectZomboidSocialPage() {
       )}
 
       <section className="border border-[var(--line)]">
-        {game.socialPosts.length ? game.socialPosts.map((post) => {
+        {feed.posts.length ? feed.posts.map((post) => {
           const run = post.projectZomboidRun;
           return (
             <article className="grid grid-cols-[3rem_1fr] gap-3 border-b border-[var(--line)] p-4 last:border-b-0" key={post.id}>
@@ -118,4 +110,23 @@ export default async function ProjectZomboidSocialPage() {
       </section>
     </div>
   );
+}
+
+async function loadProjectZomboidFeed(gameId: string) {
+  try {
+    const posts = await prisma.socialPost.findMany({
+      where: { gameId, status: "ACTIVE" },
+      include: {
+        author: { include: { profile: true } },
+        comments: { where: { deletedAt: null }, include: { author: { include: { profile: true } } }, orderBy: { createdAt: "asc" }, take: 8 },
+        projectZomboidRun: true
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30
+    });
+    return { unavailable: false, posts };
+  } catch (error) {
+    if (!isMissingPrismaTableError(error)) throw error;
+    return { unavailable: true, posts: [] };
+  }
 }

@@ -4,16 +4,12 @@ import { reviewSocialImage } from "@/app/actions";
 import { auth } from "@/auth";
 import { canModerate } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
+import { isMissingPrismaTableError } from "@/lib/prisma-errors";
 
 export default async function AdminSocialPage() {
   const session = await auth();
   if (!session?.user || session.user.status !== "ACTIVE" || !canModerate(session.user.role as never)) redirect("/dashboard");
-  const posts = await prisma.socialPost.findMany({
-    where: { imageStatus: "PENDING", imageUrl: { not: null } },
-    include: { game: true, author: { include: { profile: true } }, projectZomboidRun: true },
-    orderBy: { createdAt: "asc" },
-    take: 50
-  });
+  const feed = await loadPendingSocialPosts();
 
   return (
     <div className="container grid gap-6 py-8">
@@ -23,7 +19,7 @@ export default async function AdminSocialPage() {
       </section>
       <section className="panel grid gap-3 p-6">
         <h2 className="text-xl font-black">Pending screenshots</h2>
-        {posts.length ? posts.map((post) => (
+        {feed.unavailable ? <p className="muted">Social moderation is finishing setup after deployment.</p> : feed.posts.length ? feed.posts.map((post) => (
           <div className="grid gap-3 border-b border-[var(--line)] py-3" key={post.id}>
             <div>
               <strong>{post.game.name}: {post.projectZomboidRun?.characterName ?? "Progress post"}</strong>
@@ -44,4 +40,19 @@ export default async function AdminSocialPage() {
       </section>
     </div>
   );
+}
+
+async function loadPendingSocialPosts() {
+  try {
+    const posts = await prisma.socialPost.findMany({
+      where: { imageStatus: "PENDING", imageUrl: { not: null } },
+      include: { game: true, author: { include: { profile: true } }, projectZomboidRun: true },
+      orderBy: { createdAt: "asc" },
+      take: 50
+    });
+    return { unavailable: false, posts };
+  } catch (error) {
+    if (!isMissingPrismaTableError(error)) throw error;
+    return { unavailable: true, posts: [] };
+  }
 }
