@@ -1,7 +1,12 @@
-import { GameApprovalStatus, GameSource, Platform, PrismaClient } from "@prisma/client";
+import { GameApprovalStatus, GameSource, Platform, Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 export const APPROVED_GAME_ERROR = "This game is not currently approved for LFG listings.";
+
+export const TEST_FIXTURE_GAME_NAME_FILTER: Prisma.GameWhereInput[] = [
+  { name: { contains: "Integration Game", mode: "insensitive" } },
+  { name: { contains: "Duplicate Match Game", mode: "insensitive" } }
+];
 
 export type CatalogGameForSelector = {
   id: string;
@@ -79,14 +84,18 @@ export function assertGameListingAvailable(game: {
   }
 }
 
-export async function getApprovedGamesForSelection(options: { withCounts?: boolean; onlyWithActiveListings?: boolean } = {}) {
+export async function getApprovedGamesForSelection(
+  options: { withCounts?: boolean; onlyWithActiveListings?: boolean; excludeTestFixtures?: boolean } = {}
+) {
+  const where: Prisma.GameWhereInput = {
+    approvalStatus: "APPROVED",
+    isActive: true,
+    listingEnabled: true,
+    posts: options.onlyWithActiveListings ? { some: { status: "ACTIVE" } } : undefined,
+    NOT: options.excludeTestFixtures ? TEST_FIXTURE_GAME_NAME_FILTER : undefined
+  };
   const games = await prisma.game.findMany({
-    where: {
-      approvalStatus: "APPROVED",
-      isActive: true,
-      listingEnabled: true,
-      posts: options.onlyWithActiveListings ? { some: { status: "ACTIVE" } } : undefined
-    },
+    where,
     include: {
       platforms: { orderBy: { platform: "asc" } },
       categories: { include: { category: true } },

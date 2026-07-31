@@ -2,18 +2,20 @@ export const dynamic = "force-dynamic";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { canModerate } from "@/lib/authorization";
+import { canAdmin } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 
 export default async function AdminUsersPage() {
   const session = await auth();
-  if (!session?.user || !canModerate(session.user.role as never)) redirect("/dashboard");
+  if (!session?.user || session.user.status !== "ACTIVE" || !canAdmin(session.user.role as never)) redirect("/dashboard");
   async function setUserStatus(formData: FormData) {
     "use server";
     const current = await auth();
-    if (!current?.user || !canModerate(current.user.role as never)) return;
+    if (!current?.user || current.user.status !== "ACTIVE" || !canAdmin(current.user.role as never)) return;
     const userId = String(formData.get("userId"));
     if (userId === current.user.id) return;
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    if (!target || target.role === "ADMIN") return;
     const action = formData.get("action") === "restore-user" ? "restore-user" : "suspend-user";
     await prisma.user.update({
       where: { id: userId },
@@ -29,10 +31,12 @@ export default async function AdminUsersPage() {
       <div className="panel grid gap-2 p-5">
         {users.map((user) => (
           <form action={setUserStatus} className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] py-2" key={user.id}>
-            <span>{user.profile?.displayName ?? user.name ?? user.email ?? user.id} · {user.role} · {user.status}</span>
+            <span>{user.profile?.displayName ?? user.name ?? user.email ?? user.id} - {user.role} - {user.status}</span>
             <input name="userId" type="hidden" value={user.id} />
             {user.id === session.user.id ? (
               <span className="tag">Current user</span>
+            ) : user.role === "ADMIN" ? (
+              <span className="tag">Protected admin</span>
             ) : user.status === "SUSPENDED" ? (
               <button className="btn secondary" name="action" type="submit" value="restore-user">Unsuspend</button>
             ) : (

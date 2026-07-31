@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, type FormEvent } from "react";
-import { useFormStatus } from "react-dom";
+import { PendingActionButton } from "@/components/PendingActionButton";
 
 type ActionState = { ok: boolean; message: string };
 
@@ -70,10 +70,5 @@ function restoreFormValues(form: HTMLFormElement, formData: FormData) {
 }
 
 export function SubmitButton({ label }: { label: string }) {
-  const status = useFormStatus();
-  return (
-    <button className="btn" disabled={status.pending} type="submit">
-      {status.pending ? "Working..." : label}
-    </button>
-  );
+  return <PendingActionButton pendingLabel="Saving...">{label}</PendingActionButton>;
 }

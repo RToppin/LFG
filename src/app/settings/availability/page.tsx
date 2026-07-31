@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { PendingActionButton } from "@/components/PendingActionButton";
 import { prisma } from "@/lib/db";
 
 export default async function AvailabilitySettingsPage() {
@@ -35,7 +36,7 @@ export default async function AvailabilitySettingsPage() {
           <label className="field"><span>Start</span><input className="input" name="startTime" type="time" required /></label>
           <label className="field"><span>End</span><input className="input" name="endTime" type="time" required /></label>
           <label className="field"><span>Time zone</span><input className="input" name="timeZone" defaultValue={profile?.timeZone ?? "America/New_York"} /></label>
-          <button className="btn" type="submit">Add slot</button>
+          <PendingActionButton pendingLabel="Adding...">Add slot</PendingActionButton>
         </form>
       </section>
       <section className="panel p-6">

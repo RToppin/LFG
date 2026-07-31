@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 
 export default async function AdminReportsPage() {
   const session = await auth();
-  if (!session?.user || !canModerate(session.user.role as never)) redirect("/dashboard");
+  if (!session?.user || session.user.status !== "ACTIVE" || !canModerate(session.user.role as never)) redirect("/dashboard");
   const reports = await prisma.report.findMany({
     include: {
       reporter: { include: { profile: true } },

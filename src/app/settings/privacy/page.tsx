@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { PendingActionButton } from "@/components/PendingActionButton";
 import { prisma } from "@/lib/db";
 
 export default async function PrivacyPage() {
@@ -41,9 +42,9 @@ export default async function PrivacyPage() {
         <h1 className="text-3xl font-black">Privacy</h1>
         <form action={blockByUsername} className="flex flex-wrap gap-3">
           <input className="input w-72" name="username" placeholder="Username to block" />
-          <button className="btn danger" type="submit">
+          <PendingActionButton className="btn danger" pendingLabel="Blocking...">
             Block user
-          </button>
+          </PendingActionButton>
         </form>
       </section>
       <section className="panel grid gap-3 p-6">
@@ -53,9 +54,9 @@ export default async function PrivacyPage() {
             <form action={unblock} className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2" key={block.id}>
               <span>{block.blocked.profile?.displayName ?? block.blocked.name ?? block.blockedId}</span>
               <input name="blockedId" type="hidden" value={block.blockedId} />
-              <button className="btn secondary" type="submit">
+              <PendingActionButton className="btn secondary" pendingLabel="Unblocking...">
                 Unblock
-              </button>
+              </PendingActionButton>
             </form>
           ))
         ) : (

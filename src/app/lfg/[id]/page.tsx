@@ -1,10 +1,12 @@
 export const dynamic = "force-dynamic";
-import { Calendar, Check, RefreshCw, X } from "lucide-react";
+import { Check, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { closePost, joinOrRequestPost, refreshPost, submitReport, toggleSavePost, decideJoinRequest } from "@/app/actions";
 import { auth } from "@/auth";
 import { ActionForm } from "@/components/ActionForm";
+import { PendingActionButton } from "@/components/PendingActionButton";
+import { PendingLink } from "@/components/PendingLink";
 import { GameCover } from "@/components/GameCover";
 import { DURATION_LABELS, HOSTING_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
@@ -58,32 +60,32 @@ export default async function LfgDetailPage({ params }: { params: Promise<{ id: 
                   "use server";
                   await toggleSavePost(post.id);
                 }}>
-                  <button className="btn secondary" type="submit">
+                  <PendingActionButton className="btn secondary" pendingLabel={post.savedBy.length ? "Unsaving..." : "Saving..."}>
                     {post.savedBy.length ? "Unsave" : "Save"}
-                  </button>
+                  </PendingActionButton>
                 </form>
               ) : null}
               {isOwner ? (
                 <>
-                  <Link className="btn secondary" href={`/lfg/${post.id}/edit`}>
+                  <PendingLink className="btn secondary" href={`/lfg/${post.id}/edit`} pendingLabel="Opening editor...">
                     Edit
-                  </Link>
+                  </PendingLink>
                   <form action={async () => {
                     "use server";
                     await refreshPost(post.id);
                   }}>
-                    <button className="btn secondary" type="submit">
+                    <PendingActionButton className="btn secondary" pendingLabel="Refreshing...">
                       <RefreshCw size={16} aria-hidden />
                       Refresh
-                    </button>
+                    </PendingActionButton>
                   </form>
                   <form action={async () => {
                     "use server";
                     await closePost(post.id);
                   }}>
-                    <button className="btn danger" type="submit">
+                    <PendingActionButton className="btn danger" pendingLabel="Closing...">
                       Close
-                    </button>
+                    </PendingActionButton>
                   </form>
                 </>
               ) : null}
@@ -156,19 +158,19 @@ export default async function LfgDetailPage({ params }: { params: Promise<{ id: 
                       "use server";
                       await decideJoinRequest(request.id, "approve");
                     }}>
-                      <button className="btn" type="submit">
+                      <PendingActionButton pendingLabel="Approving...">
                         <Check size={16} aria-hidden />
                         Approve
-                      </button>
+                      </PendingActionButton>
                     </form>
                     <form action={async () => {
                       "use server";
                       await decideJoinRequest(request.id, "reject");
                     }}>
-                      <button className="btn secondary" type="submit">
+                      <PendingActionButton className="btn secondary" pendingLabel="Rejecting...">
                         <X size={16} aria-hidden />
                         Reject
-                      </button>
+                      </PendingActionButton>
                     </form>
                   </div>
                 </div>

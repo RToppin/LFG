@@ -37,3 +37,27 @@ test("approved game selector creates posts and rejects tampered game IDs", async
   await expect(page.getByText("This game is not currently approved for LFG listings.")).toBeVisible();
 });
 
+
+test("discover filters and settings overview expose the new interactions", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("alex@example.com");
+  await page.getByLabel("Display name").fill("Alex");
+  await page.getByRole("button", { name: "Continue with test account" }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+
+  await page.goto("/discover");
+  await expect(page.getByLabel("Search games")).toBeVisible();
+  await page.getByLabel("Search games").fill("Valheim");
+  await page.getByRole("button", { name: /Valheim/i }).click();
+  await expect(page).toHaveURL(/game=valheim/);
+  await expect(page.getByRole("heading", { name: /Valheim groups/ })).toBeVisible();
+
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByText("General website settings")).toBeVisible();
+  await page.getByLabel("Layout density").selectOption("compact");
+  await expect(page.getByRole("button", { name: "Save changes" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByText("Changes canceled.")).toBeVisible();
+});

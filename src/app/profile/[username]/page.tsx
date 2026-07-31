@@ -17,8 +17,22 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
       availabilitySlots: true
     }
   });
-  if (!profile) notFound();
+  if (!profile || profile.user.status !== "ACTIVE") notFound();
   if (profile.visibility === "SIGNED_IN" && !session?.user) redirect("/login");
+  if (profile.visibility === "GROUP_MEMBERS" && session?.user.id !== profile.userId) {
+    if (!session?.user) redirect("/login");
+    const sharedGroup = await prisma.groupMember.findFirst({
+      where: {
+        userId: session.user.id,
+        removedAt: null,
+        post: {
+          members: { some: { userId: profile.userId, removedAt: null } }
+        }
+      },
+      select: { id: true }
+    });
+    if (!sharedGroup) notFound();
+  }
   const posts = await prisma.lfgPost.findMany({
     where: {
       ownerId: profile.userId,

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { signInWithDiscord } from "@/app/actions";
 import { auth } from "@/auth";
+import { PendingActionButton } from "@/components/PendingActionButton";
 import { canDisconnectDiscord } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 
@@ -49,15 +50,15 @@ export default async function ConnectionsPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <form action={signInWithDiscord}>
-              <button className="btn" type="submit">
+              <PendingActionButton pendingLabel="Connecting...">
                 {discordAccount ? "Reconnect Discord" : "Connect Discord"}
-              </button>
+              </PendingActionButton>
             </form>
             {canDisconnect ? (
               <form action={disconnectDiscord}>
-                <button className="btn danger" type="submit">
+                <PendingActionButton className="btn danger" pendingLabel="Disconnecting...">
                   Disconnect Discord
-                </button>
+                </PendingActionButton>
               </form>
             ) : null}
           </div>
