@@ -88,30 +88,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   events: {
     async createUser({ user }) {
       if (!user.id) return;
-      await prisma.notificationPreference.upsert({
-        where: { userId: user.id },
-        create: { userId: user.id },
-        update: {}
-      });
+      try {
+        await prisma.notificationPreference.upsert({
+          where: { userId: user.id },
+          create: { userId: user.id },
+          update: {}
+        });
+      } catch (error) {
+        console.error("Failed to create default notification preferences.", error);
+      }
     }
   },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (user.id) {
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
-        if (dbUser?.status && dbUser.status !== "ACTIVE") return false;
+        try {
+          const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
+          if (dbUser?.status === "SUSPENDED" || dbUser?.status === "DELETED") return false;
+        } catch (error) {
+          console.error("Failed to check user status during sign-in.", error);
+        }
       }
       if (account?.provider === "discord" && user.id) {
-        await prisma.profile.updateMany({
-          where: { userId: user.id },
-          data: {
-            discordConnected: true,
-            discordUserId: account.providerAccountId,
-            discordUsername: (profile as { username?: string } | undefined)?.username,
-            discordDisplayName: (profile as { global_name?: string } | undefined)?.global_name,
-            discordAvatar: user.image ?? undefined
-          }
-        });
+        try {
+          await prisma.profile.updateMany({
+            where: { userId: user.id },
+            data: {
+              discordConnected: true,
+              discordUserId: account.providerAccountId,
+              discordUsername: (profile as { username?: string } | undefined)?.username,
+              discordDisplayName: (profile as { global_name?: string } | undefined)?.global_name,
+              discordAvatar: user.image ?? undefined
+            }
+          });
+        } catch (error) {
+          console.error("Failed to update Discord profile fields during sign-in.", error);
+        }
       }
       return true;
     },

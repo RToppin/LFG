@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.describe.configure({ mode: "serial" });
+
 test("development credentials can access dashboard", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("alex@example.com");
@@ -36,7 +38,6 @@ test("approved game selector creates posts and rejects tampered game IDs", async
   await page.getByRole("button", { name: "Publish group" }).click();
   await expect(page.getByText("This game is not currently approved for LFG listings.")).toBeVisible();
 });
-
 
 test("discover filters and settings overview expose the new interactions", async ({ page }) => {
   await page.goto("/login");
