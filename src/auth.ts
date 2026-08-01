@@ -21,7 +21,19 @@ declare module "next-auth" {
   }
 }
 
+normalizeVercelProductionAuthUrl();
+
 const providers = [];
+
+function normalizeVercelProductionAuthUrl() {
+  const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const isVercelProduction = process.env.VERCEL === "1" && (process.env.VERCEL_ENV === "production" || process.env.VERCEL_TARGET_ENV === "production");
+  if (!isVercelProduction || !productionHost) return;
+
+  const productionUrl = productionHost.startsWith("http") ? productionHost : `https://${productionHost}`;
+  process.env.AUTH_URL = productionUrl;
+  process.env.NEXTAUTH_URL = productionUrl;
+}
 
 if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
   providers.push(
