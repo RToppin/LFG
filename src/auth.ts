@@ -104,7 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user.id) {
         try {
           const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
-          if (dbUser?.status === "SUSPENDED" || dbUser?.status === "DELETED") return false;
+          if (dbUser?.status === "SUSPENDED" || dbUser?.status === "DELETED") return "/login?error=AccountInactive";
         } catch (error) {
           console.error("Failed to check user status during sign-in.", error);
         }
