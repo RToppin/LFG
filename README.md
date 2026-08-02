@@ -122,11 +122,11 @@ Steam and the Steam logo are trademarks of Valve Corporation. LFG is not affilia
 The protected expiration endpoint is:
 
 ```text
-GET or POST /api/cron/expire-posts
+POST /api/cron/expire-posts
 Authorization: Bearer <CRON_SECRET>
 ```
 
-Vercel Cron is configured in `vercel.json` to call this endpoint daily at 08:00 UTC. Expiration updates `status`, sets `closedAt`, and creates in-app notifications. Vercel sends `CRON_SECRET` as the `Authorization` bearer token for cron invocations.
+Vercel Cron or a server cron job can call this endpoint hourly or daily. Expiration updates `status`, sets `closedAt`, and creates in-app notifications.
 
 ## Tests and Build
 

@@ -1,10 +1,10 @@
 "use client";
 
-import { Bell, Bookmark, Compass, MessageSquare, PlusCircle, Settings, Shield, Users } from "lucide-react";
+import { Bell, Bookmark, Compass, PlusCircle, Settings, Shield, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export type NavIconName = "bell" | "bookmark" | "compass" | "message" | "plus" | "settings" | "shield" | "users";
+export type NavIconName = "bell" | "bookmark" | "compass" | "plus" | "settings" | "shield" | "users";
 
 export type NavItem = {
   href: string;
@@ -16,7 +16,6 @@ const icons = {
   bell: Bell,
   bookmark: Bookmark,
   compass: Compass,
-  message: MessageSquare,
   plus: PlusCircle,
   settings: Settings,
   shield: Shield,
@@ -52,7 +51,8 @@ export function NavLinks({ items, variant = "desktop" }: { items: NavItem[]; var
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   if (href === "/lfg/new") return pathname === href;
-  if (href === "/settings") return pathname.startsWith("/settings");
+  if (href === "/settings/profile") return pathname.startsWith("/settings");
   if (href === "/admin") return pathname.startsWith("/admin");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+

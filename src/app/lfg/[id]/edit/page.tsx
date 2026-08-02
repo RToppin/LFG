@@ -3,14 +3,12 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import { PendingActionButton } from "@/components/PendingActionButton";
-import { PendingLink } from "@/components/PendingLink";
 import { closePost, refreshPost } from "@/app/actions";
 
 export default async function EditLfgPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || session.user.status !== "ACTIVE") redirect("/login");
+  if (!session?.user) redirect("/login");
   const post = await prisma.lfgPost.findUnique({ where: { id }, include: { game: true } });
   if (!post) redirect("/discover");
   if (post.ownerId !== session.user.id && !["ADMIN", "MODERATOR"].includes(session.user.role)) redirect(`/lfg/${id}`);
@@ -31,21 +29,21 @@ export default async function EditLfgPage({ params }: { params: Promise<{ id: st
             "use server";
             await refreshPost(id);
           }}>
-            <PendingActionButton pendingLabel="Refreshing...">
+            <button className="btn" type="submit">
               Refresh listing
-            </PendingActionButton>
+            </button>
           </form>
           <form action={async () => {
             "use server";
             await closePost(id);
           }}>
-            <PendingActionButton className="btn danger" pendingLabel="Closing...">
+            <button className="btn danger" type="submit">
               Close group
-            </PendingActionButton>
+            </button>
           </form>
-          <PendingLink className="btn secondary" href={`/lfg/${id}`} pendingLabel="Returning...">
+          <Link className="btn secondary" href={`/lfg/${id}`}>
             Back to post
-          </PendingLink>
+          </Link>
         </div>
       </section>
     </div>

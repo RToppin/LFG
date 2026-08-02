@@ -2,11 +2,10 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { GameCover } from "@/components/GameCover";
 import { prisma } from "@/lib/db";
-import { TEST_FIXTURE_GAME_NAME_FILTER } from "@/lib/game-catalog";
 
 export default async function GamesPage() {
   const games = await prisma.game.findMany({
-    where: { approvalStatus: "APPROVED", isActive: true, listingEnabled: true, NOT: TEST_FIXTURE_GAME_NAME_FILTER },
+    where: { approvalStatus: "APPROVED", isActive: true },
     include: { platforms: true, categories: { include: { category: true } }, _count: { select: { posts: true } } },
     orderBy: { name: "asc" }
   });

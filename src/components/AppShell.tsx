@@ -8,11 +8,10 @@ import { NavLinks, type NavItem } from "@/components/NavLinks";
 const nav: NavItem[] = [
   { href: "/discover", label: "Discover", icon: "compass" },
   { href: "/groups", label: "My Groups", icon: "users" },
-  { href: "/social", label: "Social", icon: "message" },
   { href: "/lfg/new", label: "Create Post", icon: "plus" },
   { href: "/notifications", label: "Notifications", icon: "bell" },
   { href: "/saved", label: "Saved", icon: "bookmark" },
-  { href: "/settings", label: "Settings", icon: "settings" }
+  { href: "/settings/profile", label: "Settings", icon: "settings" }
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {

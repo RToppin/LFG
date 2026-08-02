@@ -133,26 +133,6 @@ enum DiscordInvitationVisibility {
   PUBLIC
   APPROVED_MEMBERS
 }
-
-enum SocialPostStatus {
-  ACTIVE
-  REMOVED_BY_MODERATION
-}
-
-enum MediaApprovalStatus {
-  NONE
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum LeaderboardVerificationStatus {
-  UNVERIFIED
-  PENDING
-  VERIFIED
-  REJECTED
-}
-
 enum GameApprovalStatus {
   PENDING
   APPROVED
@@ -173,57 +153,54 @@ enum GameRequestStatus {
   REJECTED
   DUPLICATE
 }
-
 model User {
-  id            String     @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String?    @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
-  role          UserRole   @default(USER)
+  role          UserRole  @default(USER)
   status        UserStatus @default(ACTIVE)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  accounts             Account[]
-  sessions             Session[]
-  profile              Profile?
-  lfgPosts             LfgPost[]
-  memberships          GroupMember[]
-  joinRequests         JoinRequest[]
-  savedPosts           SavedPost[]
-  dismissals           DismissedRecommendation[]
-  notifications        Notification[]
-  preferences          NotificationPreference?
-  reportsMade          Report[]                  @relation("ReportsMade")
-  reportsAgainst       Report[]                  @relation("ReportsAgainst")
-  blocksMade           Block[]                   @relation("BlocksMade")
-  blockedBy            Block[]                   @relation("BlockedBy")
-  moderationActions    ModerationAction[]
-  auditLogs            AuditLog[]
-  approvedGames        Game[]                    @relation("GameApprover")
-  gameRequests         GameRequest[]             @relation("GameRequestsMade")
-  reviewedGameRequests GameRequest[]             @relation("GameRequestsReviewed")
-  socialPosts          SocialPost[]
-  socialComments       SocialComment[]
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  lfgPosts      LfgPost[]
+  memberships   GroupMember[]
+  joinRequests  JoinRequest[]
+  savedPosts    SavedPost[]
+  dismissals    DismissedRecommendation[]
+  notifications Notification[]
+  preferences   NotificationPreference?
+  reportsMade   Report[] @relation("ReportsMade")
+  reportsAgainst Report[] @relation("ReportsAgainst")
+  blocksMade    Block[] @relation("BlocksMade")
+  blockedBy     Block[] @relation("BlockedBy")
+  moderationActions ModerationAction[]
+  auditLogs      AuditLog[]
+  approvedGames  Game[] @relation("GameApprover")
+  gameRequests   GameRequest[] @relation("GameRequestsMade")
+  reviewedGameRequests GameRequest[] @relation("GameRequestsReviewed")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String? @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
   oauth_token_secret String?
-  oauth_token        String?
+  oauth_token       String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -238,7 +215,6 @@ model Session {
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId])
 }
 
@@ -251,72 +227,71 @@ model VerificationToken {
 }
 
 model Profile {
-  id                 String            @id @default(cuid())
-  userId             String            @unique
-  username           String            @unique
-  displayName        String
-  bio                String?
-  avatarUrl          String?
-  timeZone           String
-  region             String
-  languages          String[]
-  platforms          Platform[]
-  playStyles         String[]
-  availability       String?
-  visibility         ProfileVisibility @default(PUBLIC)
-  showPastGroups     Boolean           @default(false)
-  discordConnected   Boolean           @default(false)
-  discordUserId      String?
-  discordUsername    String?
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  username          String            @unique
+  displayName       String
+  bio               String?
+  avatarUrl         String?
+  timeZone          String
+  region            String
+  languages         String[]
+  platforms         Platform[]
+  playStyles        String[]
+  availability      String?
+  visibility        ProfileVisibility @default(PUBLIC)
+  showPastGroups    Boolean           @default(false)
+  discordConnected  Boolean           @default(false)
+  discordUserId     String?
+  discordUsername   String?
   discordDisplayName String?
-  discordAvatar      String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  discordAvatar     String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  games             UserGame[]
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  games         UserGame[]
   availabilitySlots UserAvailability[]
 }
 
 model Game {
-  id                       String             @id @default(cuid())
-  name                     String
-  slug                     String             @unique
-  shortName                String?
-  coverImage               String?
-  coverImageUrl            String?
-  fallbackGradient         String
-  description              String
-  source                   GameSource         @default(CURATED)
-  sourceRank               Int?
-  steamAppId               Int?               @unique
-  approvalStatus           GameApprovalStatus @default(APPROVED)
-  active                   Boolean            @default(true)
-  isActive                 Boolean            @default(true)
-  listingEnabled           Boolean            @default(true)
-  crossPlatform            Boolean            @default(false)
-  modSupport               Boolean            @default(false)
-  supportsOnlineCoop       Boolean            @default(true)
-  supportsLocalCoop        Boolean            @default(false)
-  supportsDedicatedServers Boolean            @default(false)
-  supportsCrossplay        Boolean            @default(false)
-  minimumPlayers           Int?
-  maximumPlayers           Int?
-  aliases                  String[]
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
-  approvedAt               DateTime?
-  approvedById             String?
-  deletedAt                DateTime?
+  id              String             @id @default(cuid())
+  name            String
+  slug            String             @unique
+  shortName       String?
+  coverImage      String?
+  coverImageUrl   String?
+  fallbackGradient String
+  description     String
+  source          GameSource         @default(CURATED)
+  sourceRank      Int?
+  steamAppId      Int?               @unique
+  approvalStatus  GameApprovalStatus @default(APPROVED)
+  active          Boolean            @default(true)
+  isActive        Boolean            @default(true)
+  listingEnabled  Boolean            @default(true)
+  crossPlatform   Boolean            @default(false)
+  modSupport      Boolean            @default(false)
+  supportsOnlineCoop Boolean         @default(true)
+  supportsLocalCoop Boolean          @default(false)
+  supportsDedicatedServers Boolean   @default(false)
+  supportsCrossplay Boolean          @default(false)
+  minimumPlayers  Int?
+  maximumPlayers  Int?
+  aliases         String[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  approvedAt      DateTime?
+  approvedById    String?
+  deletedAt       DateTime?
 
-  editions    GameEdition[]
-  platforms   GamePlatform[]
-  categories  GameCategoryOnGame[]
-  userGames   UserGame[]
-  posts       LfgPost[]
-  requests    GameRequest[]
-  approvedBy  User?                @relation("GameApprover", fields: [approvedById], references: [id], onDelete: SetNull)
-  socialPosts SocialPost[]
+  editions GameEdition[]
+  platforms GamePlatform[]
+  categories GameCategoryOnGame[]
+  userGames UserGame[]
+  posts     LfgPost[]
+  requests  GameRequest[]
+  approvedBy User? @relation("GameApprover", fields: [approvedById], references: [id], onDelete: SetNull)
 
   @@index([name])
   @@index([approvalStatus])
@@ -327,9 +302,9 @@ model Game {
 }
 
 model GameCategory {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   name      String
-  slug      String   @unique
+  slug      String @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -340,7 +315,7 @@ model GameCategoryOnGame {
   gameId     String
   categoryId String
 
-  game     Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game     Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
   category GameCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([gameId, categoryId])
@@ -348,21 +323,21 @@ model GameCategoryOnGame {
 }
 
 model GameRequest {
-  id             String            @id @default(cuid())
-  requestedName  String
+  id            String            @id @default(cuid())
+  requestedName String
   normalizedName String
-  steamStoreUrl  String?
-  notes          String?
-  status         GameRequestStatus @default(PENDING)
+  steamStoreUrl String?
+  notes         String?
+  status        GameRequestStatus @default(PENDING)
   probableGameId String?
-  requestedById  String
-  reviewedById   String?
-  reviewedAt     DateTime?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  requestedById String
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   probableGame Game? @relation(fields: [probableGameId], references: [id], onDelete: SetNull)
-  requestedBy  User  @relation("GameRequestsMade", fields: [requestedById], references: [id], onDelete: Cascade)
+  requestedBy  User @relation("GameRequestsMade", fields: [requestedById], references: [id], onDelete: Cascade)
   reviewedBy   User? @relation("GameRequestsReviewed", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
@@ -371,15 +346,14 @@ model GameRequest {
 }
 
 model GameEdition {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   gameId    String
   name      String
-  active    Boolean  @default(true)
+  active    Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
   @@unique([gameId, name])
 }
 
@@ -389,26 +363,25 @@ model GamePlatform {
   platform Platform
 
   game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
-
   @@unique([gameId, platform])
 }
 
 model UserGame {
-  id                     String          @id @default(cuid())
-  userId                 String
-  profileId              String
-  gameId                 String
-  platform               Platform
-  experience             ExperienceLevel @default(ANY)
-  playStyles             String[]
-  canHost                Boolean         @default(false)
-  usesMods               Boolean         @default(false)
-  edition                String?
-  notifications          Boolean         @default(true)
-  favoriteOrder          Int             @default(0)
-  recommendationsEnabled Boolean         @default(true)
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  userId         String
+  profileId      String
+  gameId         String
+  platform       Platform
+  experience     ExperienceLevel @default(ANY)
+  playStyles     String[]
+  canHost        Boolean         @default(false)
+  usesMods       Boolean         @default(false)
+  edition        String?
+  notifications  Boolean         @default(true)
+  favoriteOrder  Int             @default(0)
+  recommendationsEnabled Boolean @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   game    Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
@@ -427,65 +400,64 @@ model UserAvailability {
   timeZone  String
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-
   @@index([profileId, dayOfWeek])
 }
 
 model LfgPost {
-  id                  String               @id @default(cuid())
-  ownerId             String
-  gameId              String
-  title               String
-  description         String
-  platform            Platform
-  platforms           Platform[]           @default([])
-  timeZone            String
-  campaignStartsAt    DateTime
-  campaignEndsAt      DateTime?
-  flexibleTime        Boolean              @default(false)
-  playersNeeded       Int
-  currentGroupSize    Int                  @default(1)
-  maxPlayers          Int
-  playStyles          String[]
-  hostingStatus       HostingStatus
-  durationType        CampaignDurationType
-  joinMode            JoinMode             @default(OPEN)
-  status              PostStatus           @default(DRAFT)
-  edition             String?
-  serverRegion        String?
-  recurringSchedule   String?
-  daysOfWeek          Int[]
-  sessionLength       String?
-  modded              Boolean              @default(false)
-  modpackName         String?
-  difficulty          String?
-  progressionStage    String?
-  requestedExperience ExperienceLevel      @default(ANY)
-  microphoneRequired  Boolean              @default(false)
-  preferredLanguage   String?
-  minimumAge          Int?
-  serverRules         String?
-  existingWorld       Boolean              @default(false)
-  waitlistEnabled     Boolean              @default(false)
-  autoCloseWhenFull   Boolean              @default(false)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  publishedAt         DateTime?
-  refreshedAt         DateTime?
-  expiresAt           DateTime?
-  closedAt            DateTime?
-  deletedAt           DateTime?
+  id                String               @id @default(cuid())
+  ownerId           String
+  gameId            String
+  title             String
+  description       String
+  platform          Platform
+  platforms         Platform[]           @default([])
+  timeZone          String
+  campaignStartsAt  DateTime
+  campaignEndsAt    DateTime?
+  flexibleTime      Boolean              @default(false)
+  playersNeeded     Int
+  currentGroupSize  Int                  @default(1)
+  maxPlayers        Int
+  playStyles        String[]
+  hostingStatus     HostingStatus
+  durationType      CampaignDurationType
+  joinMode          JoinMode             @default(OPEN)
+  status            PostStatus           @default(DRAFT)
+  edition           String?
+  serverRegion      String?
+  recurringSchedule String?
+  daysOfWeek        Int[]
+  sessionLength     String?
+  modded            Boolean              @default(false)
+  modpackName       String?
+  difficulty        String?
+  progressionStage  String?
+  requestedExperience ExperienceLevel     @default(ANY)
+  microphoneRequired Boolean             @default(false)
+  preferredLanguage String?
+  minimumAge        Int?
+  serverRules       String?
+  existingWorld     Boolean              @default(false)
+  waitlistEnabled   Boolean              @default(false)
+  autoCloseWhenFull Boolean              @default(false)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  publishedAt       DateTime?
+  refreshedAt       DateTime?
+  expiresAt         DateTime?
+  closedAt          DateTime?
+  deletedAt         DateTime?
 
-  owner         User                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  game          Game                      @relation(fields: [gameId], references: [id])
+  owner       User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  game        Game @relation(fields: [gameId], references: [id])
   playStyleRows LfgPostPlayStyle[]
-  members       GroupMember[]
-  joinRequests  JoinRequest[]
-  savedBy       SavedPost[]
-  dismissals    DismissedRecommendation[]
+  members     GroupMember[]
+  joinRequests JoinRequest[]
+  savedBy      SavedPost[]
+  dismissals   DismissedRecommendation[]
   notifications Notification[]
-  invitation    DiscordInvitation?
-  reports       Report[]
+  invitation   DiscordInvitation?
+  reports      Report[]
 
   @@index([gameId, status, expiresAt])
   @@index([platform, status])
@@ -502,7 +474,6 @@ model LfgPostPlayStyle {
   tag    String
 
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
   @@unique([postId, tag])
 }
 
@@ -516,24 +487,22 @@ model GroupMember {
 
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@unique([postId, userId])
   @@index([userId, removedAt])
 }
 
 model JoinRequest {
-  id          String            @id @default(cuid())
-  postId      String
+  id        String            @id @default(cuid())
+  postId    String
   requesterId String
-  message     String?
-  status      JoinRequestStatus @default(PENDING)
-  decidedAt   DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  message   String?
+  status    JoinRequestStatus @default(PENDING)
+  decidedAt DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   post      LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   requester User    @relation(fields: [requesterId], references: [id], onDelete: Cascade)
-
   @@index([postId, status])
   @@index([requesterId, status])
 }
@@ -544,187 +513,126 @@ model SavedPost {
   postId    String
   createdAt DateTime @default(now())
 
-  user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
   @@unique([userId, postId])
 }
 
 model DismissedRecommendation {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   postId    String
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
   undoneAt  DateTime?
 
-  user User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
   @@unique([userId, postId])
 }
 
-model SocialPost {
-  id          String              @id @default(cuid())
-  authorId    String
-  gameId      String
-  body        String
-  imageUrl    String?
-  imageStatus MediaApprovalStatus @default(NONE)
-  status      SocialPostStatus    @default(ACTIVE)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  author            User               @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  game              Game               @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  comments          SocialComment[]
-  projectZomboidRun ProjectZomboidRun?
-
-  @@index([gameId, status, createdAt])
-  @@index([authorId, createdAt])
-  @@index([imageStatus, createdAt])
-}
-
-model SocialComment {
-  id        String    @id @default(cuid())
-  postId    String
-  authorId  String
-  body      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  post   SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  @@index([postId, createdAt])
-  @@index([authorId, createdAt])
-}
-
-model ProjectZomboidRun {
-  id                 String                        @id @default(cuid())
-  postId             String                        @unique
-  characterName      String
-  zombieKills        Int
-  daysSurvived       Int
-  gameSettings       String
-  verificationStatus LeaderboardVerificationStatus @default(UNVERIFIED)
-  createdAt          DateTime                      @default(now())
-  updatedAt          DateTime                      @updatedAt
-
-  post SocialPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@index([verificationStatus, zombieKills])
-  @@index([verificationStatus, daysSurvived])
-}
-
 model Notification {
-  id         String           @id @default(cuid())
-  userId     String
-  postId     String?
-  type       NotificationType
-  title      String
-  body       String
-  link       String?
-  readAt     DateTime?
+  id        String           @id @default(cuid())
+  userId    String
+  postId    String?
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
   archivedAt DateTime?
-  dedupeKey  String?
-  createdAt  DateTime         @default(now())
+  dedupeKey String?
+  createdAt DateTime         @default(now())
 
-  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   post LfgPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
-
   @@unique([userId, dedupeKey])
   @@index([userId, readAt, archivedAt])
 }
 
 model NotificationPreference {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  inApp                Boolean  @default(true)
-  email                Boolean  @default(false)
-  recommendations      Boolean  @default(true)
-  joinRequests         Boolean  @default(true)
-  groupUpdates         Boolean  @default(true)
-  expirationReminders  Boolean  @default(true)
-  productAnnouncements Boolean  @default(false)
-  disabledGameIds      String[]
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                       String @id @default(cuid())
+  userId                   String @unique
+  inApp                    Boolean @default(true)
+  email                    Boolean @default(false)
+  recommendations          Boolean @default(true)
+  joinRequests             Boolean @default(true)
+  groupUpdates             Boolean @default(true)
+  expirationReminders      Boolean @default(true)
+  productAnnouncements     Boolean @default(false)
+  disabledGameIds          String[]
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DiscordInvitation {
-  id         String                      @id @default(cuid())
-  postId     String                      @unique
-  url        String
-  code       String
-  visibility DiscordInvitationVisibility @default(APPROVED_MEMBERS)
-  createdAt  DateTime                    @default(now())
-  updatedAt  DateTime                    @updatedAt
-  revokedAt  DateTime?
+  id          String @id @default(cuid())
+  postId      String @unique
+  url         String
+  code        String
+  visibility  DiscordInvitationVisibility @default(APPROVED_MEMBERS)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  revokedAt   DateTime?
 
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
 
 model Block {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   blockerId String
   blockedId String
   createdAt DateTime @default(now())
 
   blocker User @relation("BlocksMade", fields: [blockerId], references: [id], onDelete: Cascade)
   blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
-
   @@unique([blockerId, blockedId])
   @@index([blockedId])
 }
 
 model Report {
-  id             String     @id @default(cuid())
-  reporterId     String
+  id            String     @id @default(cuid())
+  reporterId    String
   reportedUserId String?
-  postId         String?
-  type           ReportType
-  details        String?
-  status         String     @default("OPEN")
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  resolvedAt     DateTime?
+  postId        String?
+  type          ReportType
+  details       String?
+  status        String     @default("OPEN")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  resolvedAt    DateTime?
 
-  reporter     User               @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
-  reportedUser User?              @relation("ReportsAgainst", fields: [reportedUserId], references: [id], onDelete: SetNull)
-  post         LfgPost?           @relation(fields: [postId], references: [id], onDelete: SetNull)
+  reporter     User @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser User? @relation("ReportsAgainst", fields: [reportedUserId], references: [id], onDelete: SetNull)
+  post         LfgPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
   actions      ModerationAction[]
-
   @@index([status, createdAt])
 }
 
 model ModerationAction {
-  id        String               @id @default(cuid())
+  id        String @id @default(cuid())
   actorId   String
   reportId  String?
   type      ModerationActionType
   note      String?
   metadata  Json?
-  createdAt DateTime             @default(now())
+  createdAt DateTime @default(now())
 
-  actor  User    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actor  User @relation(fields: [actorId], references: [id], onDelete: Cascade)
   report Report? @relation(fields: [reportId], references: [id], onDelete: SetNull)
-
   @@index([actorId, type])
 }
 
 model AuditLog {
-  id         String   @id @default(cuid())
-  actorId    String?
-  action     String
+  id        String @id @default(cuid())
+  actorId   String?
+  action    String
   targetType String
-  targetId   String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
-
   @@index([targetType, targetId])
 }

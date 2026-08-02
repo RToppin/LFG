@@ -8,7 +8,7 @@ export default async function NewLfgPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   if (!session.user.onboarded) redirect("/onboarding");
-  const games = await getApprovedGamesForSelection({ excludeTestFixtures: true });
+  const games = await getApprovedGamesForSelection();
   return (
     <div className="container grid gap-6 py-8">
       <div>

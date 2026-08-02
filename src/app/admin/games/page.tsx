@@ -12,7 +12,7 @@ import { GAME_CATEGORIES } from "@/lib/steam-catalog";
 
 export default async function AdminGamesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const session = await auth();
-  if (!session?.user || session.user.status !== "ACTIVE" || !canModerate(session.user.role as never)) redirect("/dashboard");
+  if (!session?.user || !canModerate(session.user.role as never)) redirect("/dashboard");
   const params = await searchParams;
   const q = params.q?.trim();
   const [games, categories, requests] = await Promise.all([

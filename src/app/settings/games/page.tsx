@@ -14,7 +14,7 @@ export default async function GameSettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const [games, profile] = await Promise.all([
-    getApprovedGamesForSelection({ excludeTestFixtures: true }),
+    getApprovedGamesForSelection(),
     prisma.profile.findUnique({ where: { userId: session.user.id }, include: { games: { include: { game: true } } } })
   ]);
   if (!profile) redirect("/onboarding");

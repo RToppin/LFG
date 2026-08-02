@@ -11,14 +11,14 @@ import { parseDiscordInvite } from "@/lib/discord";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { cleanText } from "@/lib/sanitize";
 import { calculateExpirationDate } from "@/lib/time";
-import { joinRequestSchema, lfgPostSchema, profileSchema, reportSchema, userGameSchema, gameRequestSchema, adminGameSchema, projectZomboidSocialPostSchema, socialCommentSchema } from "@/lib/validation";
+import { joinRequestSchema, lfgPostSchema, profileSchema, reportSchema, userGameSchema, gameRequestSchema, adminGameSchema } from "@/lib/validation";
 import { createNotification } from "@/lib/notifications";
 import { APPROVED_GAME_ERROR, findProbableGameMatch, mergeGames, normalizeGameSlug, requireApprovedListingGame, stableGameGradient, uniqueAliases } from "@/lib/game-catalog";
 
 type ActionState = { ok: boolean; message: string };
 
 export async function signInWithDiscord() {
-  await signIn("discord", { redirectTo: "/onboarding" });
+  await signIn("discord", { redirectTo: "/dashboard" });
 }
 
 export async function signInWithDevUser(formData: FormData) {
@@ -36,7 +36,6 @@ export async function signOutAction() {
 async function requireUser() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
-  if (session.user.status !== "ACTIVE") redirect("/login");
   return session.user;
 }
 
@@ -46,10 +45,6 @@ function formList(formData: FormData, key: string) {
 
 function checkbox(formData: FormData, key: string) {
   return formData.get(key) === "on" || formData.get(key) === "true";
-}
-
-function optionalFormString(formData: FormData, key: string) {
-  return String(formData.get(key) ?? "");
 }
 
 function safeAppRedirectPath(value: FormDataEntryValue | null) {
@@ -207,23 +202,23 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
     durationType: formData.get("durationType"),
     joinMode: "OPEN",
     edition: "",
-    serverRegion: optionalFormString(formData, "serverRegion"),
-    recurringSchedule: optionalFormString(formData, "recurringSchedule"),
+    serverRegion: formData.get("serverRegion"),
+    recurringSchedule: formData.get("recurringSchedule"),
     daysOfWeek: formList(formData, "daysOfWeek"),
-    sessionLength: optionalFormString(formData, "sessionLength"),
+    sessionLength: formData.get("sessionLength"),
     modded: checkbox(formData, "modded"),
-    modpackName: optionalFormString(formData, "modpackName"),
-    difficulty: optionalFormString(formData, "difficulty"),
-    progressionStage: optionalFormString(formData, "progressionStage"),
+    modpackName: formData.get("modpackName"),
+    difficulty: formData.get("difficulty"),
+    progressionStage: formData.get("progressionStage"),
     requestedExperience: formData.get("requestedExperience"),
     microphoneRequired: checkbox(formData, "microphoneRequired"),
-    preferredLanguage: optionalFormString(formData, "preferredLanguage"),
+    preferredLanguage: formData.get("preferredLanguage"),
     minimumAge: "13",
-    serverRules: optionalFormString(formData, "serverRules"),
+    serverRules: formData.get("serverRules"),
     existingWorld: checkbox(formData, "existingWorld"),
     waitlistEnabled: checkbox(formData, "waitlistEnabled"),
     autoCloseWhenFull: checkbox(formData, "autoCloseWhenFull"),
-    discordInvite: optionalFormString(formData, "discordInvite"),
+    discordInvite: formData.get("discordInvite"),
     discordInviteVisibility: formData.get("discordInviteVisibility") || "PUBLIC",
     publish: formData.get("intent") !== "draft"
   });
@@ -483,85 +478,6 @@ export async function markAllNotificationsRead() {
   revalidatePath("/notifications");
 }
 
-
-export async function createProjectZomboidSocialPost(_: ActionState, formData: FormData): Promise<ActionState> {
-  const user = await requireUser();
-  const rate = checkRateLimit(`social-post:${user.id}`, 12, 60 * 60 * 1000);
-  if (!rate.ok) return { ok: false, message: "You are posting too quickly. Try again later." };
-  const game = await prisma.game.findFirst({
-    where: { slug: "project-zomboid", approvalStatus: "APPROVED", isActive: true },
-    select: { id: true }
-  });
-  if (!game) return { ok: false, message: "Project Zomboid is not available for social posts yet." };
-  const parsed = projectZomboidSocialPostSchema.safeParse({
-    gameId: game.id,
-    body: formData.get("body"),
-    imageUrl: optionalFormString(formData, "imageUrl"),
-    characterName: formData.get("characterName"),
-    zombieKills: formData.get("zombieKills"),
-    daysSurvived: formData.get("daysSurvived"),
-    gameSettings: formData.get("gameSettings")
-  });
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid social post." };
-  const imageUrl = null;
-  await prisma.socialPost.create({
-    data: {
-      authorId: user.id,
-      gameId: game.id,
-      body: cleanText(parsed.data.body, 1000),
-      imageUrl,
-      imageStatus: "NONE",
-      projectZomboidRun: {
-        create: {
-          characterName: cleanText(parsed.data.characterName, 80),
-          zombieKills: parsed.data.zombieKills,
-          daysSurvived: parsed.data.daysSurvived,
-          gameSettings: cleanText(parsed.data.gameSettings, 1000)
-        }
-      }
-    }
-  });
-  revalidatePath("/social/project-zomboid");
-  revalidatePath("/social");
-  return { ok: true, message: "Post shared." };
-}
-
-export async function createSocialComment(_: ActionState, formData: FormData): Promise<ActionState> {
-  const user = await requireUser();
-  const rate = checkRateLimit(`social-comment:${user.id}`, 40, 60 * 60 * 1000);
-  if (!rate.ok) return { ok: false, message: "You are commenting too quickly. Try again later." };
-  const parsed = socialCommentSchema.safeParse({
-    postId: formData.get("postId"),
-    body: formData.get("body")
-  });
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid comment." };
-  const post = await prisma.socialPost.findUnique({ where: { id: parsed.data.postId }, select: { id: true, status: true, game: { select: { slug: true } } } });
-  if (!post || post.status !== "ACTIVE") return { ok: false, message: "This post is not available." };
-  await prisma.socialComment.create({
-    data: {
-      postId: post.id,
-      authorId: user.id,
-      body: cleanText(parsed.data.body, 500)
-    }
-  });
-  revalidatePath(`/social/${post.game.slug}`);
-  return { ok: true, message: "Comment posted." };
-}
-
-export async function reviewSocialImage(postId: string, decision: "approve" | "reject") {
-  const user = await requireUser();
-  if (!canModerate(user.role as never)) return;
-  const imageStatus = decision === "approve" ? "APPROVED" : "REJECTED";
-  await prisma.socialPost.updateMany({
-    where: { id: postId, imageUrl: { not: null } },
-    data: { imageStatus }
-  });
-  await prisma.auditLog.create({
-    data: { actorId: user.id, action: `social-image-${decision}`, targetType: "SocialPost", targetId: postId }
-  });
-  revalidatePath("/admin/social");
-  revalidatePath("/social/project-zomboid");
-}
 export async function submitReport(_: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   const parsed = reportSchema.safeParse({
@@ -814,3 +730,4 @@ export async function mergeGamesAction(formData: FormData) {
   await mergeGames(String(formData.get("sourceGameId")), String(formData.get("targetGameId")), user.id);
   revalidatePath("/admin/games");
 }
+

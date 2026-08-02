@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { PendingActionButton } from "@/components/PendingActionButton";
 import { prisma } from "@/lib/db";
 
 export default async function NotificationSettingsPage() {
@@ -55,7 +54,7 @@ export default async function NotificationSettingsPage() {
               {label}
             </label>
           ))}
-          <PendingActionButton className="btn w-fit" pendingLabel="Saving...">Save settings</PendingActionButton>
+          <button className="btn w-fit" type="submit">Save settings</button>
         </form>
       </section>
     </div>
