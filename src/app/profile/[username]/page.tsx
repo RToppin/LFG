@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { GameCover } from "@/components/GameCover";
 import { PostCard } from "@/components/PostCard";
 import { prisma } from "@/lib/db";
+import { SOCIAL_LINK_LABELS } from "@/lib/social-links";
 
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -12,7 +13,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const profile = await prisma.profile.findUnique({
     where: { username },
     include: {
-      user: true,
+      user: { include: { socialLinks: { orderBy: { sortOrder: "asc" } } } },
       games: { include: { game: true }, orderBy: { favoriteOrder: "asc" } },
       availabilitySlots: true
     }
@@ -39,6 +40,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           {profile.discordConnected ? <span className="tag">Discord connected</span> : null}
         </div>
         <p className="max-w-3xl whitespace-pre-wrap text-[var(--muted)]">{profile.bio || "No biography yet."}</p>
+        {profile.user.socialLinks.length ? (
+          <div className="flex flex-wrap gap-2">
+            {profile.user.socialLinks.map((link) => (
+              <a className="tag" href={link.url} key={link.id} rel="noreferrer" target="_blank">
+                {SOCIAL_LINK_LABELS[link.kind]}
+              </a>
+            ))}
+          </div>
+        ) : null}
         <div className="grid-auto">
           <Info label="Region" value={profile.region} />
           <Info label="Time zone" value={profile.timeZone} />

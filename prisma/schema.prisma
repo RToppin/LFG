@@ -133,6 +133,21 @@ enum DiscordInvitationVisibility {
   PUBLIC
   APPROVED_MEMBERS
 }
+
+enum SocialLinkKind {
+  WEBSITE
+  TWITCH
+  YOUTUBE
+  STEAM
+  X
+  INSTAGRAM
+  TIKTOK
+  XBOX
+  PLAYSTATION
+  NINTENDO
+  OTHER
+}
+
 enum GameApprovalStatus {
   PENDING
   APPROVED
@@ -184,6 +199,7 @@ model User {
   approvedGames  Game[] @relation("GameApprover")
   gameRequests   GameRequest[] @relation("GameRequestsMade")
   reviewedGameRequests GameRequest[] @relation("GameRequestsReviewed")
+  socialLinks    SocialLink[]
 }
 
 model Account {
@@ -577,6 +593,21 @@ model DiscordInvitation {
   revokedAt   DateTime?
 
   post LfgPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model SocialLink {
+  id        String         @id @default(cuid())
+  userId    String
+  kind      SocialLinkKind
+  url       String
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+  @@index([userId, sortOrder])
 }
 
 model Block {
