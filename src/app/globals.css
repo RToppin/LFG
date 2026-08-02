@@ -137,6 +137,50 @@ textarea {
   gap: 1rem;
 }
 
+.expandable-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.expandable-card > summary {
+  list-style: none;
+}
+
+.expandable-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.expandable-card-body {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(20, 27, 37, 0.72);
+  padding: 1rem;
+}
+
+.toggle-control {
+  display: grid;
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--panel-strong);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.toggle-mark::before {
+  content: "+";
+}
+
+.expandable-card[open] .toggle-mark::before {
+  content: "-";
+}
+
 @media (max-width: 760px) {
   .desktop-only {
     display: none;

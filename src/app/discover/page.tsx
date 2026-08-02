@@ -1,33 +1,49 @@
 export const dynamic = "force-dynamic";
 import { Platform } from "@prisma/client";
-import { Search } from "lucide-react";
 import Link from "next/link";
-import { PostCard } from "@/components/PostCard";
-import { DiscoverGameFilter } from "@/components/DiscoverGameFilter";
+import { DiscoverFilters } from "@/components/DiscoverFilters";
+import { ExpandablePostCard } from "@/components/ExpandablePostCard";
 import { auth } from "@/auth";
+import { PLATFORM_LABELS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
+import { firstSearchParam, parseSelectedGameSlugs, selectedGameNames, type SearchParamValue } from "@/lib/discover-filters";
 import { calculateMatchScore } from "@/lib/matching";
 import { getApprovedGamesForSelection } from "@/lib/game-catalog";
+
+type DiscoverSearchParams = {
+  q?: SearchParamValue;
+  game?: SearchParamValue;
+  games?: SearchParamValue;
+  platform?: SearchParamValue;
+  style?: SearchParamValue;
+  sort?: SearchParamValue;
+};
 
 export default async function DiscoverPage({
   searchParams
 }: {
-  searchParams: Promise<{ q?: string; game?: string; platform?: string; style?: string; sort?: string }>;
+  searchParams: Promise<DiscoverSearchParams>;
 }) {
   const params = await searchParams;
   const session = await auth();
-  const q = params.q?.trim();
-  const approvedGames = await getApprovedGamesForSelection({ withCounts: true });
-  const selectedGame = params.game ? approvedGames.find((game) => game.slug === params.game) : null;
+  const q = firstSearchParam(params.q)?.trim();
+  const selectedPlatform = toPlatform(firstSearchParam(params.platform));
+  const selectedStyle = firstSearchParam(params.style)?.trim();
+  const sort = firstSearchParam(params.sort);
+  const approvedGames = (await getApprovedGamesForSelection({ withCounts: true })).sort((a, b) => a.name.localeCompare(b.name));
+  const approvedSlugs = new Set(approvedGames.map((game) => game.slug));
+  const selectedSlugs = parseSelectedGameSlugs(params.game, params.games).filter((slug) => approvedSlugs.has(slug));
+  const selectedNames = selectedGameNames(approvedGames, selectedSlugs);
+
   const posts = await prisma.lfgPost.findMany({
     where: {
       status: "ACTIVE",
-      game: params.game
-        ? { slug: params.game, approvalStatus: "APPROVED", isActive: true, listingEnabled: true }
+      game: selectedSlugs.length
+        ? { slug: { in: selectedSlugs }, approvalStatus: "APPROVED", isActive: true, listingEnabled: true }
         : { approvalStatus: "APPROVED", isActive: true, listingEnabled: true },
-      playStyles: params.style ? { has: params.style } : undefined,
+      playStyles: selectedStyle ? { has: selectedStyle } : undefined,
       AND: [
-        params.platform ? { OR: [{ platform: params.platform as Platform }, { platforms: { has: params.platform as Platform } }] } : {},
+        selectedPlatform ? { OR: [{ platform: selectedPlatform }, { platforms: { has: selectedPlatform } }] } : {},
         q
           ? { OR: [
             { title: { contains: q, mode: "insensitive" } },
@@ -40,9 +56,9 @@ export default async function DiscoverPage({
     },
     include: { game: true, owner: { include: { profile: true } } },
     orderBy:
-      params.sort === "starting-soon"
+      sort === "starting-soon"
         ? [{ campaignStartsAt: "asc" }]
-        : params.sort === "open-slots"
+        : sort === "open-slots"
           ? [{ maxPlayers: "desc" }]
           : [{ refreshedAt: "desc" }],
     take: 60
@@ -60,60 +76,31 @@ export default async function DiscoverPage({
     : [];
 
   return (
-    <div className="container grid gap-6 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">Live feed</p>
-          <h1 className="text-3xl font-black">Find a group</h1>
-          <p className="muted">Choose a game and scan the open groups available right now.</p>
-        </div>
-        <Link className="btn" href="/lfg/new">Create a group</Link>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[22rem_1fr] lg:items-start">
-        <form className="panel grid gap-4 p-4">
-          <DiscoverGameFilter games={approvedGames} selectedSlug={params.game} />
-          <div className="grid gap-3 border-t border-[var(--line)] pt-4">
-            <label className="field">
-              <span>Search open groups</span>
-              <input className="input" name="q" defaultValue={q} placeholder="Title, description, modpack" />
-            </label>
-            <label className="field">
-              <span>Platform</span>
-              <select className="input" name="platform" defaultValue={params.platform ?? ""}>
-                <option value="">Any platform</option>
-                {Object.values(Platform).map((platform) => (
-                  <option key={platform} value={platform}>
-                    {platform.replaceAll("_", " ")}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Sort</span>
-              <select className="input" name="sort" defaultValue={params.sort ?? ""}>
-                <option value="">Recently refreshed</option>
-                <option value="starting-soon">Starting soon</option>
-                <option value="open-slots">Most open spots</option>
-              </select>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <button className="btn" type="submit">
-                <Search size={18} aria-hidden />
-                Update feed
-              </button>
-              <Link className="btn secondary" href="/discover">Reset</Link>
-            </div>
+    <>
+      <DiscoverFilters
+        games={approvedGames}
+        platform={selectedPlatform}
+        platforms={Object.values(Platform).map((value) => ({ value, label: PLATFORM_LABELS[value] }))}
+        q={q}
+        selectedSlugs={selectedSlugs}
+        sort={sort}
+      />
+      <div className="container grid gap-6 py-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">Live feed</p>
+            <h1 className="text-3xl font-black">Find a group</h1>
+            <p className="muted">
+              {selectedNames.length ? `${selectedNames.join(", ")} selected.` : "No games selected, showing all games."}
+            </p>
           </div>
-        </form>
+          <Link className="btn" href="/lfg/new">Create a group</Link>
+        </div>
 
         <section className="grid gap-4">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-black">{selectedGame ? `${selectedGame.name} groups` : "Open groups"}</h2>
-              <p className="muted">{posts.length} active {posts.length === 1 ? "group" : "groups"}</p>
-            </div>
-            {selectedGame ? <Link className="btn secondary" href={`/games/${selectedGame.slug}`}>Game page</Link> : null}
+          <div>
+            <h2 className="text-2xl font-black">{selectedNames.length ? "Selected game groups" : "Open groups"}</h2>
+            <p className="muted">{posts.length} active {posts.length === 1 ? "group" : "groups"}</p>
           </div>
           {posts.length ? (
             <div className="grid-auto">
@@ -134,7 +121,7 @@ export default async function DiscoverPage({
                         session.user.id
                       )
                     : undefined;
-                return <PostCard key={post.id} post={post} match={match} />;
+                return <ExpandablePostCard key={post.id} post={post} match={match} />;
               })}
             </div>
           ) : (
@@ -145,6 +132,10 @@ export default async function DiscoverPage({
           )}
         </section>
       </div>
-    </div>
+    </>
   );
+}
+
+function toPlatform(value?: string) {
+  return Object.values(Platform).includes(value as Platform) ? (value as Platform) : undefined;
 }
