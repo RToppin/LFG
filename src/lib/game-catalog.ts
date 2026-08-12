@@ -1,7 +1,7 @@
 import { GameApprovalStatus, GameSource, Platform, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
-export const APPROVED_GAME_ERROR = "This game is not currently approved for LFG listings.";
+export const APPROVED_GAME_ERROR = "This game is not currently approved for ReadyLobby listings.";
 
 export type CatalogGameForSelector = {
   id: string;
@@ -133,7 +133,7 @@ export function buildGameMergePlan(sourceGameId: string, targetGameId: string) {
   }
   return [
     { model: "UserGame", action: "move unique profile game preferences" },
-    { model: "LfgPost", action: "move LFG posts" },
+    { model: "LfgPost", action: "move group posts" },
     { model: "SavedPost", action: "preserve through moved posts" },
     { model: "DismissedRecommendation", action: "preserve through moved posts" },
     { model: "GameRequest", action: "attach requests to canonical game" },

@@ -1,13 +1,13 @@
-# LFG
+# ReadyLobby
 
-LFG is a full-stack Looking for Group application for multiplayer co-op and survival games. It helps players discover compatible groups, create fresh LFG posts, request to join groups, reveal Discord invitations only after authorization, and keep stale listings out of discovery.
+ReadyLobby is a full-stack group-finding application for multiplayer co-op and survival games. It helps players discover compatible groups, create fresh group posts, request to join groups, reveal Discord invitations only after authorization, and keep stale listings out of discovery.
 
 ## Features
 
 - Auth.js authentication with Discord OAuth and a development-only test login.
 - Persistent player profiles, privacy controls, game libraries, platforms, play styles, and availability.
 - Controlled approved game catalog with Minecraft, curated games, and a captured Steam-ranked co-op seed list from July 28, 2026.
-- LFG post creation with campaign dates, listing expiration, hosting status, join mode, capacity, tags, Discord invitation validation, public or private invite behavior, refresh, close, save, and report actions.
+- Group post creation with campaign dates, listing expiration, hosting status, join mode, capacity, tags, Discord invitation validation, public or private invite behavior, refresh, close, save, and report actions.
 - Discover search and filters for active posts with rule-based match scores and explanations.
 - Join request workflow for open join and approval-required groups.
 - In-app notifications with preferences and read state.
@@ -93,7 +93,7 @@ OAuth access tokens are stored server-side by Auth.js and are never exposed to b
 
 ## Approved Game Catalog
 
-LFG only accepts LFG posts and profile game preferences for existing approved `Game` records. A game can receive new listings when `approvalStatus = APPROVED`, `isActive = true`, and `listingEnabled = true`; server actions re-check those flags so users cannot submit arbitrary typed names or tampered game IDs.
+ReadyLobby only accepts group posts and profile game preferences for existing approved `Game` records. A game can receive new listings when `approvalStatus = APPROVED`, `isActive = true`, and `listingEnabled = true`; server actions re-check those flags so users cannot submit arbitrary typed names or tampered game IDs.
 
 The default seed script is production-safe: it preserves existing catalog data and upserts only the pre-approved catalog idempotently:
 
@@ -115,7 +115,7 @@ Administrators manage the catalog at `/admin/games`: search games, add or edit m
 
 Future Steam integration should import into the same normalized `Game` model through an adapter, verify App IDs before writing them, and treat external ranking or popularity data as dated metadata rather than a permanent live claim.
 
-Steam and the Steam logo are trademarks of Valve Corporation. LFG is not affiliated with or endorsed by Valve.
+Steam and the Steam logo are trademarks of Valve Corporation. ReadyLobby is not affiliated with or endorsed by Valve.
 
 ## Cron
 

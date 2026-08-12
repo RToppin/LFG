@@ -50,7 +50,7 @@ export default async function AdminGamesPage({ searchParams }: { searchParams: P
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-black">Manage games</h1>
-            <p className="muted">Approved, active, listing-enabled games are available for new LFG posts.</p>
+            <p className="muted">Approved, active, listing-enabled games are available for new group posts.</p>
           </div>
           <form className="flex gap-2">
             <input className="input w-72" name="q" defaultValue={q} placeholder="Search games or aliases" />

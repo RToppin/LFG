@@ -16,13 +16,9 @@ export default async function HomePage() {
     <div className="container grid gap-10 py-10">
       <section className="grid gap-7 py-8 lg:grid-cols-[1fr_0.85fr] lg:items-end">
         <div className="grid gap-5">
-          <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">Looking for Group</p>
-          <h1 className="max-w-4xl text-5xl font-black leading-tight md:text-7xl" aria-label="Looking For Group">
-            <span aria-hidden="true" className="inline-flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span><span className="text-[1.12em] text-[var(--accent)]">L</span>ooking</span>
-              <span><span className="text-[1.12em] text-[var(--accent)]">F</span>or</span>
-              <span><span className="text-[1.12em] text-[var(--accent)]">G</span>roup</span>
-            </span>
+          <p className="text-sm font-black uppercase tracking-widest text-[var(--accent)]">ReadyLobby</p>
+          <h1 className="max-w-4xl text-5xl font-black leading-tight md:text-7xl">
+            Find the right players before you ready up.
           </h1>
           <p className="max-w-2xl text-lg text-[var(--muted)]">
             Pick a game, scan open groups, and move the actual conversation to Discord

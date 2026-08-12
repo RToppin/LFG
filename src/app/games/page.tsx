@@ -19,7 +19,7 @@ export default async function GamesPage() {
             <div className="grid gap-2 p-4">
               <h2 className="text-xl font-black">{game.name}</h2>
               <p className="text-sm text-[var(--muted)]">{game.description}</p>
-              <p className="text-sm font-bold text-[var(--accent)]">{game._count.posts} LFG posts</p>
+              <p className="text-sm font-bold text-[var(--accent)]">{game._count.posts} group posts</p>
             </div>
           </Link>
         ))}

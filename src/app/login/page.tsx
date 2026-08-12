@@ -9,7 +9,7 @@ export default function LoginPage() {
       <section className="panel grid w-full max-w-md gap-5 p-6">
         <div className="grid gap-2 text-center">
           <Gamepad2 className="mx-auto text-[var(--accent)]" size={36} aria-hidden />
-          <h1 className="text-3xl font-black">Sign in to LFG</h1>
+          <h1 className="text-3xl font-black">Sign in to ReadyLobby</h1>
           <p className="muted">Use Discord for production or a test account during local development.</p>
         </div>
         {process.env.DISCORD_CLIENT_ID ? (

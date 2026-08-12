@@ -63,7 +63,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         </div>
       </section>
       <section className="grid gap-4">
-        <h2 className="text-2xl font-black">LFG posts</h2>
+        <h2 className="text-2xl font-black">Group posts</h2>
         {posts.length ? (
           <div className="grid-auto">
             {posts.map((post) => (

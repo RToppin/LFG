@@ -21,8 +21,9 @@ export function BackButton() {
 
   return (
     <div className="container pt-4 md:pt-5">
-      <button aria-label="Back" className="btn secondary size-10 p-0" onClick={goBack} title="Back" type="button">
-        <ArrowLeft size={18} aria-hidden />
+      <button aria-label="Back" className="back-button btn secondary" onClick={goBack} title="Back" type="button">
+        <ArrowLeft size={24} aria-hidden />
+        <span className="sr-only">Back</span>
       </button>
     </div>
   );
@@ -31,7 +32,7 @@ export function BackButton() {
 function parentPath(pathname: string) {
   if (pathname.startsWith("/admin/")) return "/admin";
   if (pathname.startsWith("/groups/")) return "/groups";
-  if (pathname.startsWith("/settings/")) return "/settings/profile";
+  if (pathname.startsWith("/settings/")) return "/settings";
   if (pathname.startsWith("/games/")) return "/games";
   if (pathname.startsWith("/lfg/")) return "/groups";
   if (pathname.startsWith("/profile/")) return "/discover";

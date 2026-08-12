@@ -34,7 +34,7 @@ export default async function GameRequestPage() {
           </label>
           <label className="field">
             <span>Notes</span>
-            <textarea className="input textarea" name="notes" placeholder="Platforms, co-op mode, or why this belongs in LFG." />
+            <textarea className="input textarea" name="notes" placeholder="Platforms, co-op mode, or why this belongs in ReadyLobby." />
           </label>
         </ActionForm>
       </section>

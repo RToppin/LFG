@@ -88,6 +88,12 @@ textarea {
   background: var(--danger);
 }
 
+.back-button {
+  min-width: 3.35rem;
+  min-height: 3.35rem;
+  padding: 0;
+}
+
 .field {
   display: grid;
   gap: 0.4rem;
@@ -424,6 +430,61 @@ textarea {
   font-weight: 900;
 }
 
+.settings-form-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.6rem;
+}
+
+.settings-rail a {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d131c;
+  padding: 0.55rem 0.75rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.settings-rail a:hover,
+.settings-rail a:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.settings-form-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-form-panel {
+  display: grid;
+  gap: 1rem;
+  scroll-margin-top: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(20, 27, 37, 0.88);
+  padding: 1.1rem;
+}
+
+.settings-form-panel h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.settings-form-panel.danger {
+  border-color: rgba(251, 113, 133, 0.48);
+}
+
 .metric-card {
   display: flex;
   align-items: center;
@@ -461,5 +522,23 @@ textarea {
   .player-count {
     grid-column: 2 / -1;
     justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .settings-form-layout {
+    grid-template-columns: 17rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .settings-rail {
+    position: sticky;
+    top: 1rem;
+    display: grid;
+    overflow: visible;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(20, 27, 37, 0.88);
+    padding: 0.65rem;
   }
 }

@@ -24,7 +24,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <span className="grid size-10 place-items-center rounded-lg bg-[var(--accent)] text-[#071014]">
             <Gamepad2 size={24} aria-hidden />
           </span>
-          LFG
+          ReadyLobby
         </Link>
         <nav className="grid gap-1">
           <NavLinks items={isAdmin ? nav.concat({ href: "/admin", label: "Admin", icon: "shield" }) : nav} />
