@@ -18,6 +18,7 @@ This checklist is for preparing ReadyLobby for real accounts, live data, and pub
 - `AUTH_SECRET`: strong random secret, at least 16 characters.
 - `AUTH_URL`: production site URL, such as `https://your-domain.com`.
 - `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET`: production Discord OAuth app.
+- `AUTH_DISCORD_ID` and `AUTH_DISCORD_SECRET`: optional Auth.js-compatible aliases if you prefer those names over `DISCORD_CLIENT_*`.
 - `CRON_SECRET`: strong random secret for scheduled expiration routes.
 - `ENABLE_TEST_AUTH=false`.
 - `EMAIL_FROM`: sender address when transactional email is added.

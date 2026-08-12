@@ -1,9 +1,12 @@
 export const dynamic = "force-dynamic";
 import { Gamepad2 } from "lucide-react";
 import { signInWithDevUser, signInWithDiscord } from "@/app/actions";
+import { isDiscordAuthConfigured } from "@/lib/auth-config";
 import { isTestAuthEnabled } from "@/lib/env";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const params = await searchParams;
+  const discordConfigured = isDiscordAuthConfigured();
   return (
     <div className="container grid min-h-screen place-items-center py-10">
       <section className="panel grid w-full max-w-md gap-5 p-6">
@@ -12,7 +15,12 @@ export default function LoginPage() {
           <h1 className="text-3xl font-black">Sign in to ReadyLobby</h1>
           <p className="muted">Use Discord for production or a test account during local development.</p>
         </div>
-        {process.env.DISCORD_CLIENT_ID ? (
+        {params.error === "discord-config" ? (
+          <p className="rounded-lg border border-[var(--danger)] p-3 text-sm font-bold text-[var(--danger)]">
+            Discord sign-in is missing server credentials.
+          </p>
+        ) : null}
+        {discordConfigured ? (
           <form action={signInWithDiscord}>
             <button className="btn w-full" type="submit">
               Sign in with Discord

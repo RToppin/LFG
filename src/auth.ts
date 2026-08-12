@@ -3,6 +3,7 @@ import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { prisma } from "@/lib/db";
+import { getDiscordOAuthConfig } from "@/lib/auth-config";
 import { isTestAuthEnabled } from "@/lib/env";
 
 declare module "next-auth" {
@@ -17,12 +18,13 @@ declare module "next-auth" {
 }
 
 const providers = [];
+const discordOAuth = getDiscordOAuthConfig();
 
-if (process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET) {
+if (discordOAuth.clientId && discordOAuth.clientSecret) {
   providers.push(
     Discord({
-      clientId: process.env.DISCORD_CLIENT_ID,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      clientId: discordOAuth.clientId,
+      clientSecret: discordOAuth.clientSecret,
       authorization: { params: { scope: "identify email" } }
     })
   );
@@ -74,6 +76,7 @@ async function getSessionShape(userId: string) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers,
+  trustHost: true,
   session: { strategy: isTestAuthEnabled() ? "jwt" : "database" },
   pages: { signIn: "/login" },
   callbacks: {
