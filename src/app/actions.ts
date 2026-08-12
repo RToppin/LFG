@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth, signIn, signOut } from "@/auth";
 import { assertOwnerOrModerator, canAdmin, canModerate } from "@/lib/authorization";
-import { isDiscordAuthConfigured } from "@/lib/auth-config";
 import { LISTING_FRESHNESS_DAYS } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 import { parseDiscordInvite } from "@/lib/discord";
@@ -17,11 +16,6 @@ import { createNotification } from "@/lib/notifications";
 import { APPROVED_GAME_ERROR, findProbableGameMatch, mergeGames, normalizeGameSlug, requireApprovedListingGame, stableGameGradient, uniqueAliases } from "@/lib/game-catalog";
 
 type ActionState = { ok: boolean; message: string };
-
-export async function signInWithDiscord() {
-  if (!isDiscordAuthConfigured()) redirect("/login?error=discord-config");
-  await signIn("discord", { redirectTo: "/dashboard" });
-}
 
 export async function signInWithDevUser(formData: FormData) {
   const credentials = new FormData();

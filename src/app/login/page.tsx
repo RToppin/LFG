@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { Gamepad2 } from "lucide-react";
-import { signInWithDevUser, signInWithDiscord } from "@/app/actions";
+import { signInWithDevUser } from "@/app/actions";
+import { DiscordSignInButton } from "@/components/DiscordSignInButton";
 import { isDiscordAuthConfigured } from "@/lib/auth-config";
 import { isTestAuthEnabled } from "@/lib/env";
 
@@ -21,11 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </p>
         ) : null}
         {discordConfigured ? (
-          <form action={signInWithDiscord}>
-            <button className="btn w-full" type="submit">
-              Sign in with Discord
-            </button>
-          </form>
+          <DiscordSignInButton />
         ) : (
           <p className="rounded-lg border border-[var(--line)] p-3 text-sm text-[var(--muted)]">
             Add Discord OAuth credentials to enable Discord sign-in.

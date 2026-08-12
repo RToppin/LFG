@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
-import { signInWithDiscord } from "@/app/actions";
 import { auth } from "@/auth";
+import { DiscordSignInButton } from "@/components/DiscordSignInButton";
 import { canDisconnectDiscord } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 
@@ -48,11 +48,9 @@ export default async function ConnectionsPage() {
               : "Not connected."}
           </p>
           <div className="flex flex-wrap gap-3">
-            <form action={signInWithDiscord}>
-              <button className="btn" type="submit">
-                {discordAccount ? "Reconnect Discord" : "Connect Discord"}
-              </button>
-            </form>
+            <div className="min-w-56">
+              <DiscordSignInButton label={discordAccount ? "Reconnect Discord" : "Connect Discord"} />
+            </div>
             {canDisconnect ? (
               <form action={disconnectDiscord}>
                 <button className="btn danger" type="submit">
