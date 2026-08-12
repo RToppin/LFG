@@ -36,8 +36,9 @@ export function PlayStyleChecks({ selected = [] }: { selected?: string[] }) {
   return (
     <div className="grid-auto">
       {PLAY_STYLE_TAGS.map((tag) => (
-        <label className="flex items-center gap-2 text-sm" key={tag}>
+        <label className="option-check text-sm" key={tag}>
           <input defaultChecked={selected.includes(tag)} name="playStyles" type="checkbox" value={tag} />
+          <span className="option-check-box" aria-hidden />
           {tag}
         </label>
       ))}

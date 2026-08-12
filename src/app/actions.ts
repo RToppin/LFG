@@ -213,13 +213,13 @@ export async function createLfgPost(_: ActionState, formData: FormData): Promise
     requestedExperience: formData.get("requestedExperience"),
     microphoneRequired: checkbox(formData, "microphoneRequired"),
     preferredLanguage: formData.get("preferredLanguage"),
-    minimumAge: "13",
+    minimumAge: formData.get("minimumAge") || "13",
     serverRules: formData.get("serverRules"),
     existingWorld: checkbox(formData, "existingWorld"),
     waitlistEnabled: checkbox(formData, "waitlistEnabled"),
     autoCloseWhenFull: checkbox(formData, "autoCloseWhenFull"),
     discordInvite: formData.get("discordInvite"),
-    discordInviteVisibility: formData.get("discordInviteVisibility") || "PUBLIC",
+    discordInviteVisibility: formData.get("discordInviteVisibility") || "APPROVED_MEMBERS",
     publish: formData.get("intent") !== "draft"
   });
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Invalid post." };

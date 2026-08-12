@@ -94,6 +94,7 @@ textarea {
 }
 
 .field label,
+.field > span,
 .label {
   color: var(--muted);
   font-size: 0.86rem;
@@ -137,8 +138,328 @@ textarea {
   gap: 1rem;
 }
 
+.horizontal-scroll {
+  display: flex;
+  max-width: 100%;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.45rem;
+  scroll-snap-type: x proximity;
+}
+
+.horizontal-scroll.compact {
+  gap: 0.5rem;
+}
+
+.game-filter-card,
+.platform-filter-card {
+  position: relative;
+  flex: 0 0 auto;
+  cursor: pointer;
+  scroll-snap-align: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d131c;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.game-filter-card {
+  display: grid;
+  width: min(14rem, 72vw);
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem;
+}
+
+.game-filter-card input,
+.platform-filter-card input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.game-filter-card strong,
+.game-filter-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-filter-card small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.game-filter-card:hover,
+.platform-filter-card:hover,
+.game-filter-card:has(input:focus-visible),
+.platform-filter-card:has(input:focus-visible) {
+  border-color: rgba(45, 212, 191, 0.55);
+  transform: translateY(-1px);
+}
+
+.game-filter-card.is-active,
+.game-filter-card:has(input:checked),
+.platform-filter-card:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.14);
+}
+
+.platform-filter-card {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.platform-filter-card:has(input:checked) {
+  color: var(--text);
+}
+
+.option-check {
+  position: relative;
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d131c;
+  padding: 0.65rem 0.8rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.option-check input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.option-check-box {
+  position: relative;
+  display: inline-grid;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.option-check:has(input:checked) {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--text);
+}
+
+.option-check:has(input:checked) .option-check-box {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.option-check:has(input:checked) .option-check-box::after {
+  content: "";
+  width: 0.38rem;
+  height: 0.68rem;
+  border: solid #071014;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+.expandable-card {
+  overflow: hidden;
+}
+
+.expandable-card > summary {
+  display: grid;
+  min-height: 5.75rem;
+  cursor: pointer;
+  list-style: none;
+  grid-template-columns: auto 4rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.85rem;
+}
+
+.expandable-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.details-toggle {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.details-toggle .minus,
+.expandable-card[open] .details-toggle .plus {
+  display: none;
+}
+
+.expandable-card[open] .details-toggle .minus {
+  display: inline;
+}
+
+.player-count {
+  display: inline-flex;
+  min-width: 6.5rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  color: var(--text);
+  font-weight: 900;
+}
+
+.player-count small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.expandable-card-body {
+  display: grid;
+  gap: 1rem;
+  border-top: 1px solid var(--line);
+  padding: 1rem;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.detail-grid > span {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d131c;
+  padding: 0.45rem 0.65rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.settings-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.5rem;
+}
+
+.settings-tabs a {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0d131c;
+  padding: 0.6rem 0.85rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.settings-tabs a.active,
+.settings-tabs a:hover {
+  border-color: var(--accent);
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--text);
+}
+
+.settings-section-card {
+  display: grid;
+  min-height: 100%;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.settings-section-card:hover {
+  border-color: rgba(45, 212, 191, 0.55);
+}
+
+.settings-section-card.danger {
+  border-color: rgba(251, 113, 133, 0.45);
+}
+
+.settings-section-icon {
+  display: grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  min-width: 2.45rem;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--accent);
+}
+
+.settings-section-action {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.metric-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-chart-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-chart-track {
+  height: 0.65rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #0d131c;
+}
+
+.admin-chart-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
 @media (max-width: 760px) {
   .desktop-only {
     display: none;
+  }
+
+  .expandable-card > summary {
+    grid-template-columns: auto 3.5rem minmax(0, 1fr);
+  }
+
+  .player-count {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
   }
 }

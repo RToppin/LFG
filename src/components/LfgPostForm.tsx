@@ -2,6 +2,7 @@
 
 import { CampaignDurationType, ExperienceLevel, HostingStatus, Platform } from "@prisma/client";
 import { Gamepad2, Globe2, Monitor, Smartphone, Tv, Users } from "lucide-react";
+import type { ComponentType } from "react";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { createLfgPost } from "@/app/actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -17,9 +18,35 @@ const platformIcons = {
   NINTENDO_SWITCH: Gamepad2,
   CROSS_PLATFORM: Globe2,
   OTHER: Smartphone
-} satisfies Record<Platform, React.ComponentType<{ size?: number; "aria-hidden"?: boolean }>>;
+} satisfies Record<Platform, ComponentType<{ size?: number; "aria-hidden"?: boolean }>>;
 
 const durationOptions = Object.values(CampaignDurationType).filter((duration) => duration !== "CUSTOM_RANGE");
+const baseTimeZones = [
+  "America/New_York",
+  "America/Chicago",
+  "America/Denver",
+  "America/Los_Angeles",
+  "America/Phoenix",
+  "America/Anchorage",
+  "Pacific/Honolulu",
+  "America/Toronto",
+  "America/Vancouver",
+  "Europe/London",
+  "Europe/Berlin",
+  "Europe/Paris",
+  "Asia/Tokyo",
+  "Asia/Seoul",
+  "Australia/Sydney"
+];
+
+const quickOptions = [
+  ["flexibleTime", "Flexible time"],
+  ["modded", "Modded"],
+  ["microphoneRequired", "Microphone required"],
+  ["existingWorld", "Existing world"],
+  ["autoCloseWhenFull", "Mark full automatically"],
+  ["waitlistEnabled", "Enable waitlist"]
+] as const;
 
 export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
   const initialGame = games[0];
@@ -29,6 +56,7 @@ export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [modded, setModded] = useState(false);
   const deviceTimeZone = useSyncExternalStore(subscribeToNothing, browserTimeZone, defaultTimeZone);
+  const timeZoneOptions = useMemo(() => Array.from(new Set([deviceTimeZone, ...baseTimeZones])), [deviceTimeZone]);
 
 
   const availablePlatforms = useMemo(() => {
@@ -87,7 +115,13 @@ export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
         </label>
         <label className="field">
           <span>Timezone</span>
-          <input className="input" key={deviceTimeZone} name="timeZone" defaultValue={deviceTimeZone} />
+          <select className="input" key={deviceTimeZone} name="timeZone" defaultValue={deviceTimeZone}>
+            {timeZoneOptions.map((timeZone) => (
+              <option key={timeZone} value={timeZone}>
+                {timeZone.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
 
@@ -118,6 +152,10 @@ export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
             onChange={(event) => setMaxPlayers(Math.max(2, Number(event.target.value) || 2))}
             value={maxPlayers}
           />
+        </label>
+        <label className="field">
+          <span>Minimum age</span>
+          <input className="input" name="minimumAge" type="number" min="13" max="99" defaultValue="13" />
         </label>
         <label className="field">
           <span>Experience requested</span>
@@ -151,24 +189,17 @@ export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
       </fieldset>
 
       <div className="grid-auto">
-        <label className="flex items-center gap-2">
-          <input name="flexibleTime" type="checkbox" /> Flexible time
-        </label>
-        <label className="flex items-center gap-2">
-          <input checked={modded} name="modded" onChange={(event) => setModded(event.target.checked)} type="checkbox" /> Modded
-        </label>
-        <label className="flex items-center gap-2">
-          <input name="microphoneRequired" type="checkbox" /> Microphone required
-        </label>
-        <label className="flex items-center gap-2">
-          <input name="existingWorld" type="checkbox" /> Existing world
-        </label>
-        <label className="flex items-center gap-2">
-          <input name="autoCloseWhenFull" type="checkbox" /> Mark full automatically
-        </label>
-        <label className="flex items-center gap-2">
-          <input name="waitlistEnabled" type="checkbox" /> Enable waitlist
-        </label>
+        {quickOptions.map(([name, label]) => (
+          <label className="option-check" key={name}>
+            {name === "modded" ? (
+              <input checked={modded} name={name} onChange={(event) => setModded(event.target.checked)} type="checkbox" />
+            ) : (
+              <input name={name} type="checkbox" />
+            )}
+            <span className="option-check-box" aria-hidden />
+            <span>{label}</span>
+          </label>
+        ))}
       </div>
 
       {modded ? (
@@ -184,9 +215,9 @@ export function LfgPostForm({ games }: { games: CatalogGameForSelector[] }) {
       </label>
       <label className="field">
         <span>Discord invitation behavior</span>
-        <select className="input" name="discordInviteVisibility" defaultValue="PUBLIC">
-          <option value="PUBLIC">Public on the post</option>
+        <select className="input" name="discordInviteVisibility" defaultValue="APPROVED_MEMBERS">
           <option value="APPROVED_MEMBERS">Reveal after approval</option>
+          <option value="PUBLIC">Public on the post</option>
         </select>
       </label>
       <label className="field">

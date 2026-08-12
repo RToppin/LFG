@@ -11,12 +11,12 @@ const nav: NavItem[] = [
   { href: "/lfg/new", label: "Create Post", icon: "plus" },
   { href: "/notifications", label: "Notifications", icon: "bell" },
   { href: "/saved", label: "Saved", icon: "bookmark" },
-  { href: "/settings/profile", label: "Settings", icon: "settings" }
+  { href: "/settings", label: "Settings", icon: "settings" }
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const isStaff = session?.user?.role === "ADMIN" || session?.user?.role === "MODERATOR";
+  const isAdmin = session?.user?.role === "ADMIN";
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
       <aside className="desktop-only border-r border-[var(--line)] bg-[#0b1018]/90 p-5">
@@ -27,7 +27,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           LFG
         </Link>
         <nav className="grid gap-1">
-          <NavLinks items={isStaff ? nav.concat({ href: "/admin", label: "Admin", icon: "shield" }) : nav} />
+          <NavLinks items={isAdmin ? nav.concat({ href: "/admin", label: "Admin", icon: "shield" }) : nav} />
         </nav>
         <div className="mt-8 grid gap-3 text-sm">
           {session ? (

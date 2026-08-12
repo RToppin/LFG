@@ -71,7 +71,7 @@ export const lfgPostSchema = z
     waitlistEnabled: z.boolean().default(false),
     autoCloseWhenFull: z.boolean().default(false),
     discordInvite: z.string().optional().or(z.literal("")),
-    discordInviteVisibility: z.enum(["PUBLIC", "APPROVED_MEMBERS"]).default("PUBLIC"),
+    discordInviteVisibility: z.enum(["PUBLIC", "APPROVED_MEMBERS"]).default("APPROVED_MEMBERS"),
     publish: z.boolean().default(true)
   })
   .refine((data) => data.maxPlayers > data.currentGroupSize, {

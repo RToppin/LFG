@@ -51,7 +51,7 @@ export function NavLinks({ items, variant = "desktop" }: { items: NavItem[]; var
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   if (href === "/lfg/new") return pathname === href;
-  if (href === "/settings/profile") return pathname.startsWith("/settings");
+  if (href === "/settings") return pathname.startsWith("/settings");
   if (href === "/admin") return pathname.startsWith("/admin");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
